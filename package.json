@@ -20,6 +20,7 @@
     "db:setup": "pnpm db:generate && pnpm db:migrate && pnpm db:seed"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.92.0",
     "@libsql/client": "^0.17.3",
     "drizzle-orm": "^0.45.2",
     "next": "^16.2.4",
