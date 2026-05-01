@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  /* dark warm 팔레트 */
+  --color-bg:        #0a0908;
+  --color-surface:   #14110f;
+  --color-surface-2: #1a1512;
+  --color-fg:        #f5e9d7;
+  --color-muted:     #a89683;
+  --color-subtle:    #6a5d4d;
+  --color-accent:    #d4a574;
+  --color-accent-hi: #e8b988;
+  --color-success:   #b8c994;
+  --color-danger:    #c87060;
+
+  /* radii / shadow */
+  --radius-card: 0.75rem;
+  --shadow-card: 0 1px 0 rgba(212,165,116,.06), 0 8px 24px rgba(0,0,0,.4);
+}
+
+/* next/font CSS 변수 → Tailwind 토큰 매핑 */
+@theme inline {
+  --font-sans:    var(--font-sans-kr), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-serif),   ui-serif, Georgia, serif;
+  --font-mono:    var(--font-mono-jb), ui-monospace, "JetBrains Mono", monospace;
+}
+
+@layer base {
+  html, body {
+    background: var(--color-bg);
+    color: var(--color-fg);
+  }
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-bg);
+  }
+  * {
+    border-color: var(--color-subtle);
+  }
+}
