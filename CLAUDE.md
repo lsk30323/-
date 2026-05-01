@@ -167,7 +167,7 @@ Prettier + ESLint를 `.claude/hooks/format-and-typecheck.sh`(PostToolUse 훅)이
 - [x] **Slice 1** — 프로젝트 초기화 + Tailwind v4 design tokens + next/font + `/test-fonts`
 - [x] **Slice 2** — Drizzle 스키마 (problems/sessions/attempts) + 로컬 SQLite (libSQL)
 - [x] **Slice 3** — Anthropic SDK 싱글톤 + 모델 상수 + base prompt
-- [ ] Slice 4 — 6개 토픽 프롬프트 모듈
+- [x] **Slice 4** — 6개 토픽 프롬프트 모듈
 - [ ] Slice 5 — `/api/generate-problem` 라우트 (non-stream 먼저)
 - [ ] Slice 6 — 한국어 UI strings + 랜딩 페이지
 - [ ] Slice 7 — 세션 + 문제 표시 페이지

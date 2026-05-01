@@ -50,7 +50,7 @@ open http://localhost:3000/test-fonts
 - [x] **Slice 1** — 프로젝트 초기화, Tailwind v4 토큰, next/font, `/test-fonts`
 - [x] **Slice 2** — Drizzle 스키마 + 로컬 SQLite (libSQL)
 - [x] **Slice 3** — Anthropic SDK 싱글톤 + 모델 상수 + base prompt
-- [ ] Slice 4 — 6 토픽 프롬프트
+- [x] **Slice 4** — 6 토픽 프롬프트 모듈 + `getPromptFor` 헬퍼
 - [ ] Slice 5 — `/api/generate-problem`
 - [ ] Slice 6 — 랜딩 + 한국어 UI
 - [ ] Slice 7 — 세션 + 문제 페이지
