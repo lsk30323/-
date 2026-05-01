@@ -136,6 +136,9 @@ Prettier + ESLint를 `.claude/hooks/format-and-typecheck.sh`(PostToolUse 훅)이
 - Monaco는 client-only. `'use client'` 파일에서 `next/dynamic({ ssr: false })`로만 import.
 - `@libsql/client`는 Edge·Node 모두 작동 (HTTP). `better-sqlite3`는 Edge X — 사용 X.
 - Tailwind v4 `@theme` 블록은 `@import "tailwindcss"` 뒤가 아니라 같은 파일 안에 있어야 토큰 인식.
+- Drizzle SQLite의 `mode: 'json'`은 **`text()` 컬럼에만** 적용 가능. `integer()`에 쓰면 TS 에러.
+  JSON 배열·객체는 무조건 `text('col', { mode: 'json' }).$type<T>()` 패턴.
+- Drizzle 0.45+ 인덱스 콜백은 객체 `{ idx: index(...) }` 대신 **배열** `[index(...)]` 반환.
 - Anthropic 스트리밍 on Vercel: `runtime = 'nodejs'` + Fluid Compute (300s) 권장.
   Edge는 25s TTFB 룰 (Anthropic 첫 토큰은 보통 <1s라 OK이지만 안전 마진).
 - Kotlin은 Monaco 기본 언어 X. `lib/monaco/kotlin.ts`의 Monarch tokenizer를 mount 시점에 등록.
@@ -162,7 +165,7 @@ Prettier + ESLint를 `.claude/hooks/format-and-typecheck.sh`(PostToolUse 훅)이
 ## Slice 진행 상황
 
 - [x] **Slice 1** — 프로젝트 초기화 + Tailwind v4 design tokens + next/font + `/test-fonts`
-- [ ] Slice 2 — Drizzle 스키마 + 로컬 SQLite
+- [x] **Slice 2** — Drizzle 스키마 (problems/sessions/attempts) + 로컬 SQLite (libSQL)
 - [ ] Slice 3 — Anthropic SDK 싱글톤 + 모델 상수 + base prompt
 - [ ] Slice 4 — 6개 토픽 프롬프트 모듈
 - [ ] Slice 5 — `/api/generate-problem` 라우트 (non-stream 먼저)
