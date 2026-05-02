@@ -169,7 +169,7 @@ Prettier + ESLint를 `.claude/hooks/format-and-typecheck.sh`(PostToolUse 훅)이
 - [x] **Slice 3** — Anthropic SDK 싱글톤 + 모델 상수 + base prompt
 - [x] **Slice 4** — 6개 토픽 프롬프트 모듈
 - [x] **Slice 5** — `/api/generate-problem` 라우트 (non-stream, Tool Use forcing, vitest 14 tests)
-- [ ] Slice 6 — 한국어 UI strings + 랜딩 페이지
+- [x] **Slice 6** — 한국어 UI strings (`lib/ko.ts`) + 랜딩 6×3 그리드 + `/dojo` stub
 - [ ] Slice 7 — 세션 + 문제 표시 페이지
 - [ ] Slice 8 — Monaco 에디터 통합
 - [ ] Slice 9 — 4단계 HintLadder

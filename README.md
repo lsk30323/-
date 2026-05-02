@@ -52,7 +52,7 @@ open http://localhost:3000/test-fonts
 - [x] **Slice 3** — Anthropic SDK 싱글톤 + 모델 상수 + base prompt
 - [x] **Slice 4** — 6 토픽 프롬프트 모듈 + `getPromptFor` 헬퍼
 - [x] **Slice 5** — `/api/generate-problem` 라우트 (non-stream)
-- [ ] Slice 6 — 랜딩 + 한국어 UI
+- [x] **Slice 6** — 한국어 UI strings + 랜딩 6×3 그리드
 - [ ] Slice 7 — 세션 + 문제 페이지
 - [ ] Slice 8 — Monaco 에디터
 - [ ] Slice 9 — 4단계 HintLadder
