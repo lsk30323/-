@@ -1,0 +1,1 @@
+ALTER TABLE `sessions` ADD `problem_id` integer REFERENCES problems(id);

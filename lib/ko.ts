@@ -103,6 +103,30 @@ export const UI = {
     invalidSelection: '잘못된 선택입니다. 랜딩에서 다시 골라주세요.',
   },
 
+  session: {
+    breadcrumb: '세션',
+    notFoundTitle: '세션을 찾을 수 없습니다',
+    notFoundBody: '잘못된 세션 ID입니다. 랜딩으로 돌아가 다시 시작해주세요.',
+    readyHeading: '준비됐나요?',
+    readyBody:
+      '아래 버튼을 누르면 Claude가 이 토픽·난이도에 맞는 새 문제를 생성합니다. 생성에는 보통 5~15초가 걸립니다.',
+    startGenerate: '문제 받아오기',
+    generating: '문제를 생성하는 중…',
+    errorSessionNotFound: '세션이 만료되었거나 삭제되었습니다.',
+    errorSessionIncomplete: '세션에 토픽 또는 난이도가 빠져 있습니다. 새 세션을 만들어주세요.',
+    errorGeneric: '문제 생성에 실패했습니다. 잠시 후 다시 시도해주세요.',
+    problemHeading: '문제',
+    descriptionHeading: '설명',
+    tagsHeading: '태그',
+    sessionInfoHeading: '세션 정보',
+    modeLabel: '모드',
+    practiceMode: '연습',
+    interviewMode: '면접 모의',
+    timeLimitLabel: '제한 시간',
+    timeMinutesUnit: '분',
+    notSet: '없음',
+  },
+
   modeSelect: {
     heading: '모드를 고르세요',
     subheading: '연습은 시간 제한 없이, 면접은 카운트다운과 함께 한 문제를 잠급니다.',

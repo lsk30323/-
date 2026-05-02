@@ -171,7 +171,7 @@ Prettier + ESLint를 `.claude/hooks/format-and-typecheck.sh`(PostToolUse 훅)이
 - [x] **Slice 5** — `/api/generate-problem` 라우트 (non-stream, Tool Use forcing, vitest 14 tests)
 - [x] **Slice 6** — 한국어 UI strings (`lib/ko.ts`) + 랜딩 6×3 그리드 + `/dojo` stub
 - [x] **Slice 7a** — `/api/sessions` POST + `/dojo` 모드/시간 선택 폼
-- [ ] Slice 7b — `[sessionId]` 페이지 + server action + 문제 렌더
+- [x] **Slice 7b** — `[sessionId]` 페이지 + server action + 문제 렌더 (sessions.problem_id FK)
 - [ ] Slice 8 — Monaco 에디터 통합
 - [ ] Slice 9 — 4단계 HintLadder
 - [ ] Slice 10 — 인터뷰 모의 모드 (타이머 + 락 + autosave)

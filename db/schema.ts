@@ -58,6 +58,7 @@ export const sessions = sqliteTable('sessions', {
   topic: text('topic', { enum: TOPICS }),
   difficulty: text('difficulty', { enum: DIFFICULTIES }),
   timeLimitMinutes: integer('time_limit_minutes'),
+  problemId: integer('problem_id').references(() => problems.id, { onDelete: 'set null' }),
   createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
     .default(sql`(unixepoch())`),
