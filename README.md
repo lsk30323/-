@@ -53,7 +53,8 @@ open http://localhost:3000/test-fonts
 - [x] **Slice 4** — 6 토픽 프롬프트 모듈 + `getPromptFor` 헬퍼
 - [x] **Slice 5** — `/api/generate-problem` 라우트 (non-stream)
 - [x] **Slice 6** — 한국어 UI strings + 랜딩 6×3 그리드
-- [ ] Slice 7 — 세션 + 문제 페이지
+- [x] **Slice 7a** — `/api/sessions` + 모드/시간 선택 폼
+- [ ] Slice 7b — `[sessionId]` + server action + 문제 렌더
 - [ ] Slice 8 — Monaco 에디터
 - [ ] Slice 9 — 4단계 HintLadder
 - [ ] Slice 10 — 인터뷰 모의 모드

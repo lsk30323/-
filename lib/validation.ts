@@ -15,6 +15,27 @@ export const generateProblemBody = z.object({
 });
 export type GenerateProblemBody = z.infer<typeof generateProblemBody>;
 
+/**
+ * POST /api/sessions 바디.
+ * - 연습(practice) 모드: timeLimitMinutes는 무시.
+ * - 면접(interview) 모드: timeLimitMinutes는 30·45·60 중 하나 필수.
+ *
+ * topic/difficulty는 선택. 미지정 시 [sessionId] 페이지에서 사용자가 고를 수 있게
+ * 비워둘 수 있지만, Slice 6 랜딩에서 항상 둘 다 전달하므로 사실상 항상 들어옵니다.
+ */
+export const createSessionBody = z
+  .object({
+    mode: z.enum(['practice', 'interview']),
+    topic: z.enum(TOPICS).optional(),
+    difficulty: z.enum(DIFFICULTIES).optional(),
+    timeLimitMinutes: z.union([z.literal(30), z.literal(45), z.literal(60)]).optional(),
+  })
+  .refine(
+    (v) => v.mode !== 'interview' || v.timeLimitMinutes !== undefined,
+    { message: '면접 모드는 timeLimitMinutes(30/45/60)가 필수입니다.', path: ['timeLimitMinutes'] },
+  );
+export type CreateSessionBody = z.infer<typeof createSessionBody>;
+
 /* ───── 모델이 emit하는 problem 객체 (defensive 검증) ───── */
 
 const hintStage = z.object({

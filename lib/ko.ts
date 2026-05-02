@@ -103,6 +103,23 @@ export const UI = {
     invalidSelection: '잘못된 선택입니다. 랜딩에서 다시 골라주세요.',
   },
 
+  modeSelect: {
+    heading: '모드를 고르세요',
+    subheading: '연습은 시간 제한 없이, 면접은 카운트다운과 함께 한 문제를 잠급니다.',
+    practiceLabel: '연습',
+    practiceDescription: '시간 제한 없이 자유롭게. 힌트도 자유롭게.',
+    interviewLabel: '면접 모의',
+    interviewDescription: '카운트다운 타이머 + autosave + 종료 시 자동 제출.',
+    timeHeading: '제한 시간',
+    timeMinutesUnit: '분',
+    submitPractice: '연습 시작',
+    submitInterview: '면접 시작',
+    submitting: '세션 생성 중…',
+    networkError: '세션 생성에 실패했습니다. 잠시 후 다시 시도해주세요.',
+    rejoin: '진행 중인 세션 이어가기',
+    requireTopicAndDifficulty: '랜딩에서 토픽과 난이도를 먼저 선택해주세요.',
+  },
+
   hint: {
     stage1: '1단계 — 결정 질문',
     stage2: '2단계 — 트레이드오프',
