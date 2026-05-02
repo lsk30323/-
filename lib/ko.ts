@@ -103,6 +103,17 @@ export const UI = {
     invalidSelection: '잘못된 선택입니다. 랜딩에서 다시 골라주세요.',
   },
 
+  editor: {
+    panelLabel: 'Kotlin 코드 에디터',
+    languageLabel: 'kotlin',
+    run: '실행',
+    runStubLog: '실행 (스텁) — Slice 12에서 Judge0 CE로 실제 컴파일·실행 연결 예정',
+    outputLabel: '출력',
+    outputPlaceholder:
+      '아직 출력이 없습니다. "실행"을 누르면 결과가 여기에 나타납니다.',
+    clearOutput: '비우기',
+  },
+
   session: {
     breadcrumb: '세션',
     notFoundTitle: '세션을 찾을 수 없습니다',

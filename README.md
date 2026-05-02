@@ -55,7 +55,7 @@ open http://localhost:3000/test-fonts
 - [x] **Slice 6** — 한국어 UI strings + 랜딩 6×3 그리드
 - [x] **Slice 7a** — `/api/sessions` + 모드/시간 선택 폼
 - [x] **Slice 7b** — `[sessionId]` 페이지 + server action + 문제 렌더
-- [ ] Slice 8 — Monaco 에디터
+- [x] **Slice 8** — Monaco 에디터 (Kotlin + warm-dark)
 - [ ] Slice 9 — 4단계 HintLadder
 - [ ] Slice 10 — 인터뷰 모의 모드
 - [ ] Slice 11 — 리뷰 화면 + diff

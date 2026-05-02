@@ -3,12 +3,18 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/db';
 import { problems, sessions, type Problem, type Session } from '@/db/schema';
+import { EditorPanel } from '@/components/editor/EditorPanel';
 import { UI } from '@/lib/ko';
 import { StartButton } from './start-button';
 
 export const dynamic = 'force-dynamic';
 
 type Params = Promise<{ sessionId: string }>;
+
+const STARTER_CODE = `// 답안을 이곳에 작성하세요.
+// 예: ViewModel + StateFlow를 사용하는 fun ...
+
+`;
 
 export default async function SessionPage({ params }: { params: Params }) {
   const { sessionId: idStr } = await params;
@@ -28,18 +34,38 @@ export default async function SessionPage({ params }: { params: Params }) {
     problem = p ?? null;
   }
 
+  /* 문제 미생성: max-w-3xl 좁은 레이아웃 (회수: 안내 + StartButton) */
+  if (!problem) {
+    return (
+      <main className="mx-auto max-w-3xl px-6 py-12">
+        <Link
+          href="/"
+          className="font-mono text-xs uppercase tracking-[0.2em] text-subtle hover:text-accent"
+        >
+          {UI.dojo.backToLanding}
+        </Link>
+        <SessionMeta session={session} />
+        <ReadyToStart sessionId={id} />
+      </main>
+    );
+  }
+
+  /* 문제 생성됨: 풀폭 사이드바이사이드 (lg+) — 좌:문제, 우:에디터 */
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
+    <main className="mx-auto max-w-7xl px-6 py-8">
       <Link
         href="/"
         className="font-mono text-xs uppercase tracking-[0.2em] text-subtle hover:text-accent"
       >
         {UI.dojo.backToLanding}
       </Link>
-
       <SessionMeta session={session} />
-
-      {problem ? <ProblemView problem={problem} /> : <ReadyToStart sessionId={id} />}
+      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <ProblemView problem={problem} />
+        <div className="h-[640px] lg:h-[calc(100vh-12rem)] lg:min-h-[480px] lg:sticky lg:top-6">
+          <EditorPanel initialCode={STARTER_CODE} />
+        </div>
+      </div>
     </main>
   );
 }
@@ -95,13 +121,13 @@ function ReadyToStart({ sessionId }: { sessionId: number }) {
 
 function ProblemView({ problem }: { problem: Problem }) {
   return (
-    <article className="mt-10">
+    <article className="lg:overflow-y-auto lg:max-h-[calc(100vh-12rem)] lg:pr-2">
       <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent">
         {UI.session.problemHeading}
       </p>
-      <h1 className="mt-2 font-display text-5xl leading-[1.1] text-fg">{problem.title}</h1>
+      <h1 className="mt-2 font-display text-4xl leading-[1.15] text-fg">{problem.title}</h1>
 
-      <section className="mt-8">
+      <section className="mt-6">
         <h2 className="sr-only">{UI.session.descriptionHeading}</h2>
         <div className="whitespace-pre-wrap text-base leading-relaxed text-fg/90">
           {problem.description}
@@ -109,7 +135,7 @@ function ProblemView({ problem }: { problem: Problem }) {
       </section>
 
       {problem.tags.length > 0 && (
-        <section className="mt-8">
+        <section className="mt-6">
           <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-subtle">
             {UI.session.tagsHeading}
           </h2>
