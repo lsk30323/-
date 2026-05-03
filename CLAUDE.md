@@ -173,7 +173,7 @@ Prettier + ESLint를 `.claude/hooks/format-and-typecheck.sh`(PostToolUse 훅)이
 - [x] **Slice 7a** — `/api/sessions` POST + `/dojo` 모드/시간 선택 폼
 - [x] **Slice 7b** — `[sessionId]` 페이지 + server action + 문제 렌더 (sessions.problem_id FK)
 - [x] **Slice 8** — Monaco 에디터 통합 (Kotlin Monarch + warm-dark 테마 + 사이드바이사이드)
-- [ ] Slice 9 — 4단계 HintLadder
+- [x] **Slice 9** — 4단계 HintLadder (어코디언 + confirm dialog + attempts.hintsViewed 영속)
 - [ ] Slice 10 — 인터뷰 모의 모드 (타이머 + 락 + autosave)
 - [ ] Slice 11 — 리뷰 화면 + diff editor
 - [ ] Slice 12 — Kotlin 자동 실행 + Vercel/Turso 배포 (옵션)

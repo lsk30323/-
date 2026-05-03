@@ -56,7 +56,7 @@ open http://localhost:3000/test-fonts
 - [x] **Slice 7a** — `/api/sessions` + 모드/시간 선택 폼
 - [x] **Slice 7b** — `[sessionId]` 페이지 + server action + 문제 렌더
 - [x] **Slice 8** — Monaco 에디터 (Kotlin + warm-dark)
-- [ ] Slice 9 — 4단계 HintLadder
+- [x] **Slice 9** — 4단계 HintLadder + reveal 영속
 - [ ] Slice 10 — 인터뷰 모의 모드
 - [ ] Slice 11 — 리뷰 화면 + diff
 - [ ] Slice 12 — Kotlin 자동 실행 + 배포

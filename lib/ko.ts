@@ -156,18 +156,32 @@ export const UI = {
   },
 
   hint: {
+    sectionHeading: '4단계 힌트 사다리',
+    sectionSubheading:
+      '막혔을 때 한 단계씩 차례로 열어보세요. 본 단계는 시도 기록에 남아 자기 평가에 반영됩니다.',
+    stageLabel: (n: 1 | 2 | 3 | 4) => `${n}단계`,
     stage1: '1단계 — 결정 질문',
     stage2: '2단계 — 트레이드오프',
     stage3: '3단계 — 이해 점검',
     stage4: '4단계 — 확장 학습',
+    kindDecision: '결정',
+    kindTradeoff: '트레이드오프',
+    kindComprehension: '이해 점검',
+    kindExtension: '확장 학습',
     reveal: '힌트 보기',
+    revealing: '여는 중…',
+    revealed: '열림',
     locked: '잠김',
+    lockedReason: '이전 단계를 먼저 열어주세요.',
     confirmTitle: '다음 힌트를 보시겠습니까?',
     confirmBody:
       '한 번 보면 되돌릴 수 없습니다. 본 힌트는 시도 기록에 남아 자기 평가에 반영됩니다.',
     confirmYes: '예, 보겠습니다',
     confirmNo: '취소',
     rationaleHeading: '해설',
+    optionsHeading: '선택지',
+    persistError: '힌트 기록을 저장하지 못했습니다. 잠시 후 다시 시도해주세요.',
+    sessionMissingError: '세션 또는 문제가 준비되지 않아 기록할 수 없습니다.',
   },
 
   errors: {

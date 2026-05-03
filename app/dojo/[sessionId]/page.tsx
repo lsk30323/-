@@ -1,9 +1,10 @@
-import { eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/db';
-import { problems, sessions, type Problem, type Session } from '@/db/schema';
+import { attempts, problems, sessions, type Problem, type Session } from '@/db/schema';
 import { EditorPanel } from '@/components/editor/EditorPanel';
+import { HintLadder } from '@/components/hint/HintLadder';
 import { UI } from '@/lib/ko';
 import { StartButton } from './start-button';
 
@@ -25,6 +26,7 @@ export default async function SessionPage({ params }: { params: Params }) {
   if (!session) notFound();
 
   let problem: Problem | null = null;
+  let initialHintsViewed: number[] = [];
   if (session.problemId !== null) {
     const [p] = await db
       .select()
@@ -32,6 +34,15 @@ export default async function SessionPage({ params }: { params: Params }) {
       .where(eq(problems.id, session.problemId))
       .limit(1);
     problem = p ?? null;
+
+    /* in-progress attempt가 있으면 그 hintsViewed로 시드 (새로고침 후 reveal 유지) */
+    const [att] = await db
+      .select()
+      .from(attempts)
+      .where(and(eq(attempts.sessionId, id), eq(attempts.completed, false)))
+      .orderBy(desc(attempts.createdAt))
+      .limit(1);
+    if (att) initialHintsViewed = att.hintsViewed;
   }
 
   /* 문제 미생성: max-w-3xl 좁은 레이아웃 (회수: 안내 + StartButton) */
@@ -50,7 +61,7 @@ export default async function SessionPage({ params }: { params: Params }) {
     );
   }
 
-  /* 문제 생성됨: 풀폭 사이드바이사이드 (lg+) — 좌:문제, 우:에디터 */
+  /* 문제 생성됨: 풀폭 사이드바이사이드 (lg+) — 좌:문제+힌트, 우:에디터 */
   return (
     <main className="mx-auto max-w-7xl px-6 py-8">
       <Link
@@ -61,7 +72,14 @@ export default async function SessionPage({ params }: { params: Params }) {
       </Link>
       <SessionMeta session={session} />
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <ProblemView problem={problem} />
+        <div className="space-y-6 lg:overflow-y-auto lg:max-h-[calc(100vh-12rem)] lg:pr-2">
+          <ProblemView problem={problem} />
+          <HintLadder
+            hints={problem.hints}
+            sessionId={id}
+            initialRevealed={initialHintsViewed}
+          />
+        </div>
         <div className="h-[640px] lg:h-[calc(100vh-12rem)] lg:min-h-[480px] lg:sticky lg:top-6">
           <EditorPanel initialCode={STARTER_CODE} />
         </div>
@@ -121,7 +139,7 @@ function ReadyToStart({ sessionId }: { sessionId: number }) {
 
 function ProblemView({ problem }: { problem: Problem }) {
   return (
-    <article className="lg:overflow-y-auto lg:max-h-[calc(100vh-12rem)] lg:pr-2">
+    <article>
       <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent">
         {UI.session.problemHeading}
       </p>
