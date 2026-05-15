@@ -103,6 +103,27 @@ export const UI = {
     invalidSelection: '잘못된 선택입니다. 랜딩에서 다시 골라주세요.',
   },
 
+  interview: {
+    timerLabel: '남은 시간',
+    expired: '종료',
+    phaseCalm: '여유',
+    phaseAlert: '주의',
+    phaseUrgent: '임박',
+    phaseFinal: '마지막 순간',
+    progressLabel: '경과 비율',
+    autosaveIdle: '대기',
+    autosaveDirty: '변경됨',
+    autosaveSaving: '저장 중…',
+    autosaveSaved: '저장됨',
+    autosaveError: '저장 실패',
+    autosaveLastAt: '마지막 저장',
+    lockNotice:
+      '인터뷰 진행 중입니다. 페이지를 떠나면 진행 내용이 손실될 수 있어요.',
+    submitting: '제출 중…',
+    submitNow: '지금 제출',
+    autoSubmittedOnExpire: '시간이 만료되어 자동 제출되었습니다.',
+  },
+
   editor: {
     panelLabel: 'Kotlin 코드 에디터',
     languageLabel: 'kotlin',

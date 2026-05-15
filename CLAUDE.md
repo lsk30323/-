@@ -174,7 +174,8 @@ Prettier + ESLint를 `.claude/hooks/format-and-typecheck.sh`(PostToolUse 훅)이
 - [x] **Slice 7b** — `[sessionId]` 페이지 + server action + 문제 렌더 (sessions.problem_id FK)
 - [x] **Slice 8** — Monaco 에디터 통합 (Kotlin Monarch + warm-dark 테마 + 사이드바이사이드)
 - [x] **Slice 9** — 4단계 HintLadder (어코디언 + confirm dialog + attempts.hintsViewed 영속)
-- [ ] Slice 10 — 인터뷰 모의 모드 (타이머 + 락 + autosave)
+- [x] **Slice 10a** — 인터뷰 훅 3종 (useCountdown / useDebouncedAutosave / useInterviewLock) + InterviewTimer
+- [ ] Slice 10b — InterviewSession 통합 + autosave/finalize 액션 + page 분기
 - [ ] Slice 11 — 리뷰 화면 + diff editor
 - [ ] Slice 12 — Kotlin 자동 실행 + Vercel/Turso 배포 (옵션)
 
