@@ -58,7 +58,7 @@ open http://localhost:3000/test-fonts
 - [x] **Slice 8** — Monaco 에디터 (Kotlin + warm-dark)
 - [x] **Slice 9** — 4단계 HintLadder + reveal 영속
 - [x] **Slice 10a** — 인터뷰 훅 3종 + Timer 비주얼
-- [ ] Slice 10b — 인터뷰 세션 통합 (autosave + auto-submit)
+- [x] **Slice 10b** — 인터뷰 세션 통합 (autosave + auto-submit)
 - [ ] Slice 11 — 리뷰 화면 + diff
 - [ ] Slice 12 — Kotlin 자동 실행 + 배포
 

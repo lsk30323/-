@@ -2,9 +2,17 @@ import { and, desc, eq } from 'drizzle-orm';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/db';
-import { attempts, problems, sessions, type Problem, type Session } from '@/db/schema';
+import {
+  attempts,
+  problems,
+  sessions,
+  type Attempt,
+  type Problem,
+  type Session,
+} from '@/db/schema';
 import { EditorPanel } from '@/components/editor/EditorPanel';
 import { HintLadder } from '@/components/hint/HintLadder';
+import { InterviewSession } from '@/components/interview/InterviewSession';
 import { UI } from '@/lib/ko';
 import { StartButton } from './start-button';
 
@@ -26,7 +34,8 @@ export default async function SessionPage({ params }: { params: Params }) {
   if (!session) notFound();
 
   let problem: Problem | null = null;
-  let initialHintsViewed: number[] = [];
+  let inProgress: Attempt | null = null;
+  let completed: Attempt | null = null;
   if (session.problemId !== null) {
     const [p] = await db
       .select()
@@ -35,15 +44,25 @@ export default async function SessionPage({ params }: { params: Params }) {
       .limit(1);
     problem = p ?? null;
 
-    /* in-progress attempt가 있으면 그 hintsViewed로 시드 (새로고침 후 reveal 유지) */
+    /* in-progress attempt → hint reveal 시드 + autosave된 code 시드 */
     const [att] = await db
       .select()
       .from(attempts)
       .where(and(eq(attempts.sessionId, id), eq(attempts.completed, false)))
       .orderBy(desc(attempts.createdAt))
       .limit(1);
-    if (att) initialHintsViewed = att.hintsViewed;
+    inProgress = att ?? null;
+
+    /* 이미 제출된 attempt가 있으면 인터뷰는 끝난 상태 */
+    const [done] = await db
+      .select()
+      .from(attempts)
+      .where(and(eq(attempts.sessionId, id), eq(attempts.completed, true)))
+      .orderBy(desc(attempts.createdAt))
+      .limit(1);
+    completed = done ?? null;
   }
+  const initialHintsViewed = inProgress?.hintsViewed ?? completed?.hintsViewed ?? [];
 
   /* 문제 미생성: max-w-3xl 좁은 레이아웃 (회수: 안내 + StartButton) */
   if (!problem) {
@@ -61,7 +80,23 @@ export default async function SessionPage({ params }: { params: Params }) {
     );
   }
 
-  /* 문제 생성됨: 풀폭 사이드바이사이드 (lg+) — 좌:문제+힌트, 우:에디터 */
+  /* 인터뷰 모드: 자체 셸(InterviewSession)에서 nav 숨김 + 타이머 + autosave + 락.
+     완료된 attempt가 있어도 같은 컴포넌트가 "제출됨" 분기를 처리합니다. */
+  if (session.mode === 'interview' && session.timeLimitMinutes) {
+    const initialCode = completed?.code ?? inProgress?.code ?? STARTER_CODE;
+    return (
+      <InterviewSession
+        session={session}
+        problem={problem}
+        totalSeconds={session.timeLimitMinutes * 60}
+        initialCode={initialCode}
+        initialHintsViewed={initialHintsViewed}
+      />
+    );
+  }
+
+  /* 연습 모드: 풀폭 사이드바이사이드 (lg+) — 좌:문제+힌트, 우:에디터 */
+  const initialCode = inProgress?.code || STARTER_CODE;
   return (
     <main className="mx-auto max-w-7xl px-6 py-8">
       <Link
@@ -81,7 +116,7 @@ export default async function SessionPage({ params }: { params: Params }) {
           />
         </div>
         <div className="h-[640px] lg:h-[calc(100vh-12rem)] lg:min-h-[480px] lg:sticky lg:top-6">
-          <EditorPanel initialCode={STARTER_CODE} />
+          <EditorPanel initialCode={initialCode} />
         </div>
       </div>
     </main>
