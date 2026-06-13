@@ -1,0 +1,44 @@
+name: Deploy 한능검 앱 (GitHub Pages)
+
+# hanguksa-agents/app(PWA)을 GitHub Pages로 자동 배포합니다.
+# ── 최초 1회만 수동 설정 필요 ──
+#   GitHub 저장소 → Settings → Pages → "Build and deployment"
+#   → Source: "GitHub Actions" 선택 후 저장.
+# 그 뒤로는 이 브랜치에 app 변경을 push할 때마다 자동 배포됩니다.
+# 배포 URL 예: https://lsk30323.github.io/-/  (Actions 로그/Settings→Pages에서 확인)
+
+on:
+  push:
+    branches: ["claude/modest-archimedes-hfciM"]
+    paths:
+      - "hanguksa-agents/app/**"
+      - ".github/workflows/deploy-hanguksa.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload app folder as Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: hanguksa-agents/app
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
