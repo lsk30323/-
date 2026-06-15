@@ -4,6 +4,8 @@
   "description": "한국사능력검정시험 2급 대비 — 모의고사 5회분·해설·오답노트·개념 요약 학습 앱",
   "lang": "ko",
   "dir": "ltr",
+  "id": "/-/",
+  "prefer_related_applications": false,
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
