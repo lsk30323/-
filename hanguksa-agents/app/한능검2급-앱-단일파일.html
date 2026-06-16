@@ -119,6 +119,9 @@
   .statrow .bw{flex:1;height:9px;background:var(--line);border-radius:999px;overflow:hidden}
   .statrow .bw>i{display:block;height:100%;border-radius:999px}
   .statrow .pc{width:46px;text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+  body.fs-sm .qtext{font-size:15px}body.fs-sm .opt{font-size:14px}body.fs-sm .passage{font-size:13px}
+  body.fs-lg .qtext{font-size:20px}body.fs-lg .opt{font-size:17px}body.fs-lg .passage{font-size:16px}body.fs-lg .expl{font-size:15.5px}
+  .lginput{width:100%;box-sizing:border-box;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);margin-bottom:8px;font-size:15px}
   .nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--navbg);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;padding:8px 0 calc(8px + env(safe-area-inset-bottom))}
   .nav button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;padding:4px}
   .nav button .ic{font-size:19px}
@@ -134,6 +137,7 @@
 <div id="app"></div>
 <div class="toast" id="toast"></div>
 
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 window.EXAM_DATA = window.EXAM_DATA || {};
 window.EXAM_DATA["1"] = [
@@ -23312,8 +23316,29 @@ window.CONCEPTS = {
   // ---- storage ----
   function load(k,d){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } }
   function save(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
-  function results(){ return load("hg2_results",[]); }
-  function wrongMap(){ return load("hg2_wrong",{}); }
+  // ---- 프로필(로그인) ----
+  var GOOGLE_CLIENT_ID = ""; // Google OAuth 클라이언트 ID 입력 시 구글 로그인 활성화
+  function profiles(){ return load("hg2_profiles", []); }
+  function setProfiles(p){ save("hg2_profiles", p); }
+  function curId(){ return load("hg2_current", null); }
+  function setCur(id){ if(id==null){ try{localStorage.removeItem("hg2_current");}catch(e){} } else save("hg2_current", id); }
+  function curProfile(){ var id=curId(); return profiles().filter(function(p){return p.id===id;})[0]||null; }
+  function pkey(k){ return "hg2:"+(curId()||"guest")+":"+k; }
+  function addProfile(type, name, email){
+    var ps=profiles();
+    if(email){ var ex=ps.filter(function(x){return x.email===email;})[0]; if(ex){ setCur(ex.id); return ex; } }
+    var id=type+"_"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+    var p={id:id,type:type,name:name||"게스트",email:email||"",created:Date.now()};
+    ps.push(p); setProfiles(ps); setCur(id); return p;
+  }
+  function migrateLegacy(){
+    if(profiles().length) return;
+    var oldR=load("hg2_results",null), oldW=load("hg2_wrong",null);
+    if(oldR||oldW){ var p={id:"local_legacy",type:"guest",name:"내 기록",email:"",created:Date.now()}; setProfiles([p]); setCur(p.id);
+      if(oldR) save("hg2:"+p.id+":results", oldR); if(oldW) save("hg2:"+p.id+":wrong", oldW); }
+  }
+  function results(){ return load(pkey("results"),[]); }
+  function wrongMap(){ return load(pkey("wrong"),{}); }
   function bestFor(exam){ var b=null; results().forEach(function(r){ if(r.exam===exam && (!b||r.correct>b.correct)) b=r; }); return b; }
 
   // ---- helpers ----
@@ -23347,14 +23372,16 @@ window.CONCEPTS = {
     else if(v==="wrong") html=vWrong();
     else if(v==="concepts") html=vConcepts();
     else if(v==="stats") html=vStats();
-    var showNav = ["home","examList","practiceSetup","wrong","concepts","stats"].indexOf(v)>=0;
+    else if(v==="login") html=vLogin();
+    else if(v==="account") html=vAccount();
+    var showNav = ["home","examList","practiceSetup","wrong","concepts","stats","account"].indexOf(v)>=0;
     app.innerHTML = html + (showNav? vNav() : "");
     bind();
     if(v==="quiz" && S.mode==="exam") startExamTimer();
   }
 
   function header(title,backTo){
-    return '<header class="bar">'+(backTo!=null?'<button class="btn-back" data-go="'+backTo+'">‹ 뒤로</button>':'')+'<h1>'+esc(title)+'</h1><button class="btn-back" data-theme-toggle="1" aria-label="다크모드 전환" style="background:none;font-size:18px;padding:6px 8px">'+(isDark()?'☀️':'🌙')+'</button></header>';
+    return '<header class="bar">'+(backTo!=null?'<button class="btn-back" data-go="'+backTo+'">‹ 뒤로</button>':'')+'<h1>'+esc(title)+'</h1><button class="btn-back" data-go="account" aria-label="계정" style="background:none;font-size:17px;padding:6px 8px">👤</button><button class="btn-back" data-theme-toggle="1" aria-label="다크모드 전환" style="background:none;font-size:18px;padding:6px 8px">'+(isDark()?'☀️':'🌙')+'</button></header>';
   }
   function vNav(){
     function b(tab,ic,label){ return '<button class="'+(S.view===tab?"on":"")+'" data-nav="'+tab+'"><span class="ic">'+ic+'</span>'+label+'</button>'; }
@@ -23494,10 +23521,10 @@ window.CONCEPTS = {
       byArea[q.area][1]++; if(ok){byArea[q.area][0]++; correct++; delete wm[q.src];}
       else { wm[q.src]={area:q.area,exam:q.exam,n:q.n,q:q.q,ans:q.answer,chosen:ch,t:Date.now()}; }
     });
-    save("hg2_wrong",wm);
+    save(pkey("wrong"),wm);
     var rec={exam:S.examNo,date:Date.now(),correct:correct,total:qs.length,byArea:byArea,answers:{}};
     qs.forEach(function(q,i){rec.answers[i]=S.answers[i]||null;});
-    var rs=results(); rs.push(rec); save("hg2_results",rs);
+    var rs=results(); rs.push(rec); save(pkey("results"),rs);
     S.lastResult=rec; go("result");
   }
 
@@ -23560,6 +23587,74 @@ window.CONCEPTS = {
       });
       h+='</div>';
     });
+    return h;
+  }
+
+  // -------- 로그인 / 계정 / 설정 --------
+  function applyFont(){ var s=load("hg2_font","md"); document.body.classList.remove("fs-sm","fs-lg"); if(s==="sm")document.body.classList.add("fs-sm"); else if(s==="lg")document.body.classList.add("fs-lg"); }
+  function setFont(s){ save("hg2_font",s); applyFont(); render(); }
+  function doLogin(type){
+    if(type==="guest"){ addProfile("guest","게스트",""); S.loginMode=null; go("home"); }
+    else if(type==="email"){ S.loginMode="email"; render(); }
+    else if(type==="emailGo"){
+      var em=((document.getElementById("liEmail")||{}).value||"").trim().toLowerCase();
+      if(em.indexOf("@")<1){ toast("이메일 주소를 확인하세요"); return; }
+      var nm=((document.getElementById("liName")||{}).value||"").trim()||em.split("@")[0];
+      addProfile("email",nm,em); S.loginMode=null; go("home");
+    }
+    else if(type==="google"){ toast("구글 로그인은 GOOGLE_CLIENT_ID 설정이 필요해요(README 참고). 우선 이메일·게스트로 시작하세요."); }
+  }
+  function setupGoogle(){
+    if(!(GOOGLE_CLIENT_ID && window.google && window.google.accounts && window.google.accounts.id)) return;
+    try{
+      window.google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogle });
+      var el=document.getElementById("gsi");
+      if(el) window.google.accounts.id.renderButton(el, { theme:"outline", size:"large", text:"continue_with", width:280 });
+    }catch(e){}
+  }
+  function onGoogle(resp){
+    try{
+      var b=resp.credential.split(".")[1].replace(/-/g,"+").replace(/_/g,"/");
+      var p=JSON.parse(decodeURIComponent(escape(atob(b))));
+      addProfile("google", p.name||p.email||"Google 사용자", (p.email||"").toLowerCase());
+      S.loginMode=null; go("home");
+    }catch(e){ toast("구글 로그인 처리에 실패했어요"); }
+  }
+  function vLogin(){
+    if(S.loginMode==="email"){
+      var f='<header class="bar"><button class="btn-back" data-loginback="1">‹ 뒤로</button><h1>이메일로 시작</h1></header>';
+      f+='<div class="card"><div style="font-weight:800;margin-bottom:10px">이메일로 프로필 만들기</div>';
+      f+='<input id="liEmail" type="email" inputmode="email" placeholder="이메일 주소" class="lginput">';
+      f+='<input id="liName" type="text" placeholder="표시 이름 (선택)" class="lginput" style="margin-bottom:12px">';
+      f+='<button class="btn primary" data-login="emailGo">시작하기</button>';
+      f+='<p class="muted" style="font-size:12px;margin-top:8px">비밀번호 없는 로컬 프로필이에요(이 기기에만 저장). 같은 이메일로 다시 시작하면 기존 기록을 불러옵니다.</p></div>';
+      return f;
+    }
+    var h='<div class="hero" style="padding-top:40px;text-align:center"><div class="kword">KOREAN HISTORY · LEVEL 2</div><h2 style="margin-top:8px">한능검 2급<br>합격 마스터</h2><p>로그인하고 학습 기록을 저장하세요</p></div>';
+    h+='<div class="card">';
+    if(GOOGLE_CLIENT_ID){ h+='<div id="gsi" style="display:flex;justify-content:center;margin-bottom:10px"></div>'; }
+    else { h+='<button class="btn ghost" data-login="google" style="margin-bottom:10px">🔵 Google로 계속하기</button>'; }
+    h+='<button class="btn ghost" data-login="email" style="margin-bottom:10px">✉️ 이메일로 시작</button>';
+    h+='<button class="btn primary" data-login="guest">👤 게스트로 바로 시작</button>';
+    h+='</div>';
+    h+='<p class="muted" style="font-size:12px;text-align:center;padding:0 16px">기록은 이 기기에 저장됩니다(오프라인 PWA). 기기 간 동기화는 지원하지 않아요.</p>';
+    return h;
+  }
+  function vAccount(){
+    var p=curProfile(), h=header("계정 · 설정","home");
+    var tl=p?(p.type==="google"?"Google":p.type==="email"?"이메일":"게스트"):"게스트";
+    h+='<div class="card"><div class="row"><div><div style="font-weight:800;font-size:16px">'+esc(p?p.name:"게스트")+'</div><div class="muted" style="font-size:12.5px">'+tl+(p&&p.email?(" · "+esc(p.email)):"")+'</div></div><span class="pill gold">현재</span></div></div>';
+    h+='<div class="card"><div style="font-weight:800;margin-bottom:8px">글자 크기</div><div class="areachips">';
+    var fs=load("hg2_font","md");
+    [["sm","작게"],["md","보통"],["lg","크게"]].forEach(function(o){ h+='<button class="chip'+(fs===o[0]?" on":"")+'" data-fontsize="'+o[0]+'">'+o[1]+'</button>'; });
+    h+='</div></div>';
+    h+='<div class="card"><div class="row"><div style="font-weight:800">화면 테마</div><button class="btn ghost sm" data-theme-toggle="1" style="width:auto;padding:8px 14px">'+(isDark()?"☀️ 라이트로":"🌙 다크로")+'</button></div></div>';
+    var ps=profiles();
+    if(ps.length>1){ h+='<div class="card"><div style="font-weight:800;margin-bottom:6px">프로필 전환</div>';
+      ps.forEach(function(x){ h+='<div class="list-item row"><div>'+esc(x.name)+' <span class="muted" style="font-size:12px">'+esc(x.email||x.type)+'</span></div>'+(x.id===curId()?'<span class="pill">현재</span>':'<button class="btn ghost sm" data-switch="'+x.id+'" style="width:auto;padding:6px 12px">전환</button>')+'</div>'; });
+      h+='</div>'; }
+    h+='<button class="btn ghost" data-logout="1">로그아웃</button>';
+    h+='<p class="muted" style="font-size:12px;text-align:center;margin-top:10px">기록은 이 기기에 프로필별로 저장돼요. 기기 간 동기화는 지원하지 않습니다.</p>';
     return h;
   }
 
@@ -23629,6 +23724,12 @@ window.CONCEPTS = {
     app.querySelectorAll("[data-tile]").forEach(function(e){e.onclick=function(){var t=e.getAttribute("data-tile");go(t==="exam"?"examList":t==="practice"?"practiceSetup":t);};});
     app.querySelectorAll("[data-ext]").forEach(function(e){e.onclick=function(){window.open(e.getAttribute("data-ext"),"_blank","noopener");};});
     app.querySelectorAll("[data-practice-area]").forEach(function(e){e.onclick=function(){ startPractice(e.getAttribute("data-practice-area"), 10); };});
+    app.querySelectorAll("[data-login]").forEach(function(e){e.onclick=function(){ doLogin(e.getAttribute("data-login")); };});
+    app.querySelectorAll("[data-fontsize]").forEach(function(e){e.onclick=function(){ setFont(e.getAttribute("data-fontsize")); };});
+    app.querySelectorAll("[data-switch]").forEach(function(e){e.onclick=function(){ setCur(e.getAttribute("data-switch")); go("home"); };});
+    var loBtn=app.querySelector("[data-logout]"); if(loBtn) loBtn.onclick=function(){ setCur(null); S.loginMode=null; go("login"); };
+    var lbBtn=app.querySelector("[data-loginback]"); if(lbBtn) lbBtn.onclick=function(){ S.loginMode=null; render(); };
+    if(S.view==="login") setupGoogle();
     app.querySelectorAll("[data-exam]").forEach(function(e){e.onclick=function(){startExam(e.getAttribute("data-exam"));};});
     var ib=document.getElementById("installBtn"); if(ib) ib.onclick=function(){ if(deferredPrompt){deferredPrompt.prompt();deferredPrompt=null;} };
 
@@ -23658,13 +23759,13 @@ window.CONCEPTS = {
     }
     if(S.view==="wrong"){
       var wr=app.querySelector("[data-wrongreview]"); if(wr) wr.onclick=startWrongReview;
-      var cw=app.querySelector("[data-clearwrong]"); if(cw) cw.onclick=function(){ if(confirm("오답노트를 모두 비울까요?")){ save("hg2_wrong",{}); render(); } };
+      var cw=app.querySelector("[data-clearwrong]"); if(cw) cw.onclick=function(){ if(confirm("오답노트를 모두 비울까요?")){ save(pkey("wrong"),{}); render(); } };
     }
   }
   function recordPractice(){
     var q=S.questions[S.idx], ch=S.answers[S.idx], wm=wrongMap();
     if(ch===q.answer){ delete wm[q.src]; } else { wm[q.src]={area:q.area,exam:q.exam,n:q.n,q:q.q,ans:q.answer,chosen:ch,t:Date.now()}; }
-    save("hg2_wrong",wm);
+    save(pkey("wrong"),wm);
   }
 
   // theme (다크모드)
@@ -23676,9 +23777,11 @@ window.CONCEPTS = {
   window.addEventListener("beforeinstallprompt",function(e){ e.preventDefault(); deferredPrompt=e; if(S.view==="home") render(); });
 
   // boot
+  migrateLegacy();
   applyTheme();
+  applyFont();
   if(!ALL.length){ app.innerHTML='<div class="card" style="margin-top:40px"><b>데이터를 불러오지 못했습니다.</b><div class="muted" style="font-size:13px;margin-top:6px">data/exam-1~5.js 파일이 같은 폴더에 있어야 합니다. 로컬 서버 또는 설치 환경에서 열어 주세요.</div></div>'; }
-  else render();
+  else { if(!curProfile()) S.view="login"; render(); }
 })();
 </script>
 </body>
