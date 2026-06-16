@@ -114,6 +114,11 @@
   .seq i{color:var(--gold);font-style:normal;font-weight:900}
   .list-item{padding:11px 0;border-bottom:1px solid var(--line)}
   .list-item:last-child{border-bottom:0}
+  .statrow{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:13px}
+  .statrow .nm{width:62px;flex:0 0 auto;font-weight:700}
+  .statrow .bw{flex:1;height:9px;background:var(--line);border-radius:999px;overflow:hidden}
+  .statrow .bw>i{display:block;height:100%;border-radius:999px}
+  .statrow .pc{width:46px;text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
   .nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--navbg);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;padding:8px 0 calc(8px + env(safe-area-inset-bottom))}
   .nav button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;padding:4px}
   .nav button .ic{font-size:19px}
@@ -23341,7 +23346,8 @@ window.CONCEPTS = {
     else if(v==="review") html=vReview();
     else if(v==="wrong") html=vWrong();
     else if(v==="concepts") html=vConcepts();
-    var showNav = ["home","examList","practiceSetup","wrong","concepts"].indexOf(v)>=0;
+    else if(v==="stats") html=vStats();
+    var showNav = ["home","examList","practiceSetup","wrong","concepts","stats"].indexOf(v)>=0;
     app.innerHTML = html + (showNav? vNav() : "");
     bind();
     if(v==="quiz" && S.mode==="exam") startExamTimer();
@@ -23352,7 +23358,7 @@ window.CONCEPTS = {
   }
   function vNav(){
     function b(tab,ic,label){ return '<button class="'+(S.view===tab?"on":"")+'" data-nav="'+tab+'"><span class="ic">'+ic+'</span>'+label+'</button>'; }
-    return '<div class="nav">'+b("home","🏠","홈")+b("wrong","✕","오답노트")+b("concepts","📌","개념·D-7")+'</div>';
+    return '<div class="nav">'+b("home","🏠","홈")+b("stats","📊","통계")+b("wrong","✕","오답노트")+b("concepts","📌","개념")+'</div>';
   }
 
   // -------- HOME --------
@@ -23368,6 +23374,7 @@ window.CONCEPTS = {
       tile("practice","🎯","영역 연습","13개 영역 랜덤 풀이")+
       tile("wrong","✕","오답노트","틀린 문제 자동 누적")+
       tile("concepts","📌","개념·D-7","시대 뼈대·함정·요약")+
+      tile("stats","📊","통계","영역별 약점·점수 추이")+
     '</div>';
     h+='<button class="btn ghost" data-ext="http://tok.historyexam.go.kr/" style="margin-bottom:12px">🏛️ 공식 기출문제 풀기 (국사편찬위·무료)</button>';
     h+='<div class="card"><div class="row"><div><div class="muted" style="font-size:12px">학습 현황</div>'+
@@ -23556,6 +23563,40 @@ window.CONCEPTS = {
     return h;
   }
 
+  // -------- STATS (약점 추적) --------
+  function statsAgg(){
+    var rs=results(), ba={};
+    rs.forEach(function(r){ var b=r.byArea||{}; Object.keys(b).forEach(function(a){ if(!ba[a])ba[a]=[0,0]; ba[a][0]+=b[a][0]; ba[a][1]+=b[a][1]; }); });
+    return ba;
+  }
+  function bar(c,t){ var pct=t?Math.round(c/t*100):0; var col=pct>=80?"var(--ok)":pct>=60?"var(--accent)":"var(--no)";
+    return '<div class="bw"><i style="width:'+pct+'%;background:'+col+'"></i></div><div class="pc" style="color:'+col+'">'+pct+'%</div>'; }
+  function vStats(){
+    var rs=results(), h=header("학습 통계",null);
+    if(!rs.length){ h+='<div class="card center" style="padding:30px 16px"><div style="font-size:30px">📊</div><div style="font-weight:800;margin-top:8px">아직 기록이 없어요</div><div class="muted" style="font-size:13px;margin:6px 0 14px">모의고사를 풀면 영역별 약점·점수 추이가 쌓입니다.</div><button class="btn primary" data-go="examList">모의고사 풀기</button></div>'; return h; }
+    var cs=rs.map(function(r){return r.correct;}), n=rs.length;
+    var avg=Math.round(cs.reduce(function(a,b){return a+b;},0)/n), best=Math.max.apply(null,cs), wn=Object.keys(wrongMap()).length;
+    h+='<div class="card"><div class="row"><div><div class="muted" style="font-size:12px">응시 '+n+'회</div><div style="font-weight:900;font-size:19px;margin-top:2px">평균 '+avg+'/50 · 최고 '+best+'/50</div></div><span class="gradeb '+gclass(gradeOf(avg).label)+'">평균 '+gradeOf(avg).label+'</span></div><div class="muted" style="font-size:12px;margin-top:6px">누적 오답 '+wn+'개 · 2급 목표 40개</div></div>';
+    var ba=statsAgg(), eC=0,eT=0,tC=0,tT=0;
+    AREAS.forEach(function(a){var x=ba[a];if(!x)return;if(ERA.indexOf(a)>=0){eC+=x[0];eT+=x[1];}else{tC+=x[0];tT+=x[1];}});
+    h+='<div class="card"><div style="font-weight:800;margin-bottom:6px">시대 vs 주제</div>'+
+       '<div class="statrow"><div class="nm">시대</div>'+bar(eC,eT)+'</div>'+
+       '<div class="statrow"><div class="nm">주제</div>'+bar(tC,tT)+'</div></div>';
+    var areas=AREAS.filter(function(a){return ba[a]&&ba[a][1]>0;}).sort(function(a,b){return (ba[a][0]/ba[a][1])-(ba[b][0]/ba[b][1]);});
+    h+='<div class="card"><div style="font-weight:800;margin-bottom:6px">영역별 정답률 <span class="muted" style="font-size:12px">(약점순 · 탭하면 연습)</span></div>';
+    areas.forEach(function(a){ h+='<div class="statrow" data-practice-area="'+a+'" style="cursor:pointer"><div class="nm">'+esc(a)+'</div>'+bar(ba[a][0],ba[a][1])+'</div>'; });
+    h+='</div>';
+    var weak=areas.slice(0,3);
+    if(weak.length){ h+='<div class="card" style="border-color:var(--no)"><div style="font-weight:800;margin-bottom:8px;color:var(--no)">⚠ 취약 영역 — 집중 연습 추천</div>';
+      weak.forEach(function(a){ var pct=Math.round(ba[a][0]/ba[a][1]*100); h+='<div class="list-item row"><div>'+esc(a)+' <span class="muted" style="font-size:12px">'+ba[a][0]+'/'+ba[a][1]+' · '+pct+'%</span></div><button class="btn gold sm" data-practice-area="'+a+'" style="width:auto;padding:7px 14px">연습</button></div>'; });
+      h+='</div>'; }
+    h+='<div class="card"><div style="font-weight:800;margin-bottom:6px">최근 응시</div>';
+    rs.slice().reverse().slice(0,8).forEach(function(r){ var g=gradeOf(r.correct), dt=new Date(r.date), ds=(dt.getMonth()+1)+'/'+dt.getDate();
+      h+='<div class="list-item row"><div>'+esc(String(r.exam))+'회 <span class="muted" style="font-size:12px">'+ds+'</span></div><span class="gradeb '+gclass(g.label)+'" style="font-size:12px">'+r.correct+'/'+r.total+' · '+g.label+'</span></div>'; });
+    h+='</div>';
+    return h;
+  }
+
   // -------- CONCEPTS --------
   function vConcepts(){
     var h=header("개념 · D-7 요약",null);
@@ -23587,6 +23628,7 @@ window.CONCEPTS = {
     app.querySelectorAll("[data-nav]").forEach(function(e){e.onclick=function(){go(e.getAttribute("data-nav"));};});
     app.querySelectorAll("[data-tile]").forEach(function(e){e.onclick=function(){var t=e.getAttribute("data-tile");go(t==="exam"?"examList":t==="practice"?"practiceSetup":t);};});
     app.querySelectorAll("[data-ext]").forEach(function(e){e.onclick=function(){window.open(e.getAttribute("data-ext"),"_blank","noopener");};});
+    app.querySelectorAll("[data-practice-area]").forEach(function(e){e.onclick=function(){ startPractice(e.getAttribute("data-practice-area"), 10); };});
     app.querySelectorAll("[data-exam]").forEach(function(e){e.onclick=function(){startExam(e.getAttribute("data-exam"));};});
     var ib=document.getElementById("installBtn"); if(ib) ib.onclick=function(){ if(deferredPrompt){deferredPrompt.prompt();deferredPrompt=null;} };
 
