@@ -1,5 +1,5 @@
 /* 한능검 2급 합격 마스터 — 서비스워커 (오프라인 캐시) */
-const CACHE = 'hanguksa2-v1';
+const CACHE = 'hanguksa2-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -11,6 +11,11 @@ const ASSETS = [
   './data/exam-3.js',
   './data/exam-4.js',
   './data/exam-5.js',
+  './data/exam-6.js',
+  './data/exam-7.js',
+  './data/exam-8.js',
+  './data/exam-9.js',
+  './data/exam-10.js',
   './data/concepts.js',
 ];
 
