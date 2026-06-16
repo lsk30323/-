@@ -161,6 +161,7 @@
 <script src="./data/exam-19.js"></script>
 <script src="./data/exam-20.js"></script>
 <script src="./data/concepts.js"></script>
+<script src="./firebase-sync.js"></script>
 <script>
 (function(){
   "use strict";
@@ -183,7 +184,21 @@
 
   // ---- storage ----
   function load(k,d){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } }
-  function save(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+  function save(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} cloudMaybe(k); }
+  function fbReady(){ return !!(window.HG2SYNC && window.HG2SYNC.enabled); }
+  function cloudMaybe(k){ if(fbReady() && S.fbUid && k.indexOf("hg2:"+S.fbUid+":")===0){ try{ HG2SYNC.push(S.fbUid,{results:load("hg2:"+S.fbUid+":results",[]),wrong:load("hg2:"+S.fbUid+":wrong",{}),bm:load("hg2:"+S.fbUid+":bm",[])}); }catch(e){} } }
+  function onFbUser(u){
+    if(!u){ S.fbUid=null; return; }
+    S.fbUid=u.uid;
+    var ps=profiles(), ex=ps.filter(function(p){return p.id===u.uid;})[0];
+    var prov=(u.providerData&&u.providerData[0]&&u.providerData[0].providerId)||"";
+    if(!ex){ ps.push({id:u.uid,type:prov.indexOf("google")>=0?"google":"email",name:u.displayName||((u.email||"").split("@")[0])||"사용자",email:u.email||"",created:Date.now()}); setProfiles(ps); }
+    setCur(u.uid);
+    try{ HG2SYNC.pull(u.uid).then(function(d){
+      if(d){ if(d.results) save("hg2:"+u.uid+":results",d.results); if(d.wrong) save("hg2:"+u.uid+":wrong",d.wrong); if(d.bm) save("hg2:"+u.uid+":bm",d.bm); }
+      if(S.view==="login"||S.view==="account") go("home"); else render();
+    }).catch(function(){ if(S.view==="login") go("home"); }); }catch(e){ if(S.view==="login") go("home"); }
+  }
   // ---- 프로필(로그인) ----
   var GOOGLE_CLIENT_ID = ""; // Google OAuth 클라이언트 ID 입력 시 구글 로그인 활성화
   function profiles(){ return load("hg2_profiles", []); }
@@ -523,7 +538,17 @@
       var nm=((document.getElementById("liName")||{}).value||"").trim()||em.split("@")[0];
       addProfile("email",nm,em); S.loginMode=null; go("home");
     }
-    else if(type==="google"){ toast("구글 로그인은 GOOGLE_CLIENT_ID 설정이 필요해요(README 참고). 우선 이메일·게스트로 시작하세요."); }
+    else if(type==="fbSignIn"||type==="fbSignUp"){
+      var em2=((document.getElementById("liEmail")||{}).value||"").trim().toLowerCase();
+      var pw=((document.getElementById("liPw")||{}).value||"");
+      if(em2.indexOf("@")<1||pw.length<6){ toast("이메일과 6자 이상 비밀번호를 입력하세요"); return; }
+      var pr=(type==="fbSignUp")?HG2SYNC.signUpEmail(em2,pw):HG2SYNC.signInEmail(em2,pw);
+      pr.catch(function(e){ toast("실패: "+((e&&e.code)||"오류")); });
+    }
+    else if(type==="google"){
+      if(fbReady()){ HG2SYNC.signInGoogle().catch(function(e){ toast("구글 로그인 실패: "+((e&&e.code)||"오류")); }); }
+      else { toast("구글 로그인은 설정이 필요해요(FIREBASE_SETUP.md). 우선 이메일·게스트로 시작하세요."); }
+    }
   }
   function setupGoogle(){
     if(!(GOOGLE_CLIENT_ID && window.google && window.google.accounts && window.google.accounts.id)) return;
@@ -543,22 +568,31 @@
   }
   function vLogin(){
     if(S.loginMode==="email"){
-      var f='<header class="bar"><button class="btn-back" data-loginback="1">‹ 뒤로</button><h1>이메일로 시작</h1></header>';
-      f+='<div class="card"><div style="font-weight:800;margin-bottom:10px">이메일로 프로필 만들기</div>';
+      var fb=fbReady();
+      var f='<header class="bar"><button class="btn-back" data-loginback="1">‹ 뒤로</button><h1>'+(fb?"이메일 로그인":"이메일로 시작")+'</h1></header>';
+      f+='<div class="card"><div style="font-weight:800;margin-bottom:10px">'+(fb?"이메일 계정":"이메일로 프로필 만들기")+'</div>';
       f+='<input id="liEmail" type="email" inputmode="email" placeholder="이메일 주소" class="lginput">';
-      f+='<input id="liName" type="text" placeholder="표시 이름 (선택)" class="lginput" style="margin-bottom:12px">';
-      f+='<button class="btn primary" data-login="emailGo">시작하기</button>';
-      f+='<p class="muted" style="font-size:12px;margin-top:8px">비밀번호 없는 로컬 프로필이에요(이 기기에만 저장). 같은 이메일로 다시 시작하면 기존 기록을 불러옵니다.</p></div>';
+      if(fb){
+        f+='<input id="liPw" type="password" placeholder="비밀번호 (6자 이상)" class="lginput" style="margin-bottom:12px">';
+        f+='<div class="btnrow"><button class="btn primary" data-login="fbSignIn">로그인</button><button class="btn ghost" data-login="fbSignUp">회원가입</button></div>';
+        f+='<p class="muted" style="font-size:12px;margin-top:8px">클라우드 계정 — 다른 기기에서도 같은 기록으로 동기화됩니다.</p></div>';
+      } else {
+        f+='<input id="liName" type="text" placeholder="표시 이름 (선택)" class="lginput" style="margin-bottom:12px">';
+        f+='<button class="btn primary" data-login="emailGo">시작하기</button>';
+        f+='<p class="muted" style="font-size:12px;margin-top:8px">비밀번호 없는 로컬 프로필이에요(이 기기에만 저장). 같은 이메일로 다시 시작하면 기존 기록을 불러옵니다.</p></div>';
+      }
       return f;
     }
+    var fb=fbReady();
     var h='<div class="hero" style="padding-top:40px;text-align:center"><div class="kword">KOREAN HISTORY · LEVEL 2</div><h2 style="margin-top:8px">한능검 2급<br>합격 마스터</h2><p>로그인하고 학습 기록을 저장하세요</p></div>';
     h+='<div class="card">';
-    if(GOOGLE_CLIENT_ID){ h+='<div id="gsi" style="display:flex;justify-content:center;margin-bottom:10px"></div>'; }
+    if(fb){ h+='<button class="btn ghost" data-login="google" style="margin-bottom:10px">🔵 Google로 로그인</button>'; }
+    else if(GOOGLE_CLIENT_ID){ h+='<div id="gsi" style="display:flex;justify-content:center;margin-bottom:10px"></div>'; }
     else { h+='<button class="btn ghost" data-login="google" style="margin-bottom:10px">🔵 Google로 계속하기</button>'; }
-    h+='<button class="btn ghost" data-login="email" style="margin-bottom:10px">✉️ 이메일로 시작</button>';
+    h+='<button class="btn ghost" data-login="email" style="margin-bottom:10px">✉️ 이메일로 '+(fb?"로그인":"시작")+'</button>';
     h+='<button class="btn primary" data-login="guest">👤 게스트로 바로 시작</button>';
     h+='</div>';
-    h+='<p class="muted" style="font-size:12px;text-align:center;padding:0 16px">기록은 이 기기에 저장됩니다(오프라인 PWA). 기기 간 동기화는 지원하지 않아요.</p>';
+    h+='<p class="muted" style="font-size:12px;text-align:center;padding:0 16px">'+(fb?"로그인하면 여러 기기에서 기록이 동기화돼요(클라우드 저장).":"기록은 이 기기에 저장됩니다(오프라인 PWA). 게스트·이메일은 로컬 전용.")+'</p>';
     return h;
   }
   function vAccount(){
@@ -655,7 +689,7 @@
     var sqEl=document.getElementById("sq"); if(sqEl) sqEl.onkeydown=function(ev){ if(ev.key==="Enter"){ S.searchQ=sqEl.value; render(); } };
     app.querySelectorAll("[data-fontsize]").forEach(function(e){e.onclick=function(){ setFont(e.getAttribute("data-fontsize")); };});
     app.querySelectorAll("[data-switch]").forEach(function(e){e.onclick=function(){ setCur(e.getAttribute("data-switch")); go("home"); };});
-    var loBtn=app.querySelector("[data-logout]"); if(loBtn) loBtn.onclick=function(){ setCur(null); S.loginMode=null; go("login"); };
+    var loBtn=app.querySelector("[data-logout]"); if(loBtn) loBtn.onclick=function(){ if(fbReady()&&S.fbUid){ try{HG2SYNC.signOut();}catch(e){} } S.fbUid=null; setCur(null); S.loginMode=null; go("login"); };
     var lbBtn=app.querySelector("[data-loginback]"); if(lbBtn) lbBtn.onclick=function(){ S.loginMode=null; render(); };
     if(S.view==="login") setupGoogle();
     app.querySelectorAll("[data-exam]").forEach(function(e){e.onclick=function(){startExam(e.getAttribute("data-exam"));};});
@@ -709,6 +743,7 @@
   migrateLegacy();
   applyTheme();
   applyFont();
+  if(window.HG2SYNC){ HG2SYNC.onUser(onFbUser); HG2SYNC.onReady(function(){ if(S.view==="login") render(); }); }
   if(!ALL.length){ app.innerHTML='<div class="card" style="margin-top:40px"><b>데이터를 불러오지 못했습니다.</b><div class="muted" style="font-size:13px;margin-top:6px">data/exam-1~5.js 파일이 같은 폴더에 있어야 합니다. 로컬 서버 또는 설치 환경에서 열어 주세요.</div></div>'; }
   else { if(!curProfile()) S.view="login"; render(); }
 })();

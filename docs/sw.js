@@ -1,8 +1,9 @@
 /* 한능검 2급 합격 마스터 — 서비스워커 (오프라인 캐시) */
-const CACHE = 'hanguksa2-v4';
+const CACHE = 'hanguksa2-v5';
 const ASSETS = [
   './',
   './index.html',
+  './firebase-sync.js',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
