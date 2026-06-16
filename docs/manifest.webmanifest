@@ -1,0 +1,20 @@
+{
+  "name": "한능검 2급 합격 마스터",
+  "short_name": "한능검2급",
+  "description": "한국사능력검정시험 2급 대비 — 모의고사 5회분·해설·오답노트·개념 요약 학습 앱",
+  "lang": "ko",
+  "dir": "ltr",
+  "id": "/-/",
+  "prefer_related_applications": false,
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f7f3ec",
+  "theme_color": "#1e3a5f",
+  "categories": ["education"],
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
