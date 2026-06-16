@@ -242,7 +242,10 @@
     else if(v==="stats") html=vStats();
     else if(v==="login") html=vLogin();
     else if(v==="account") html=vAccount();
-    var showNav = ["home","examList","practiceSetup","wrong","concepts","stats","account"].indexOf(v)>=0;
+    else if(v==="search") html=vSearch();
+    else if(v==="bookmarks") html=vBookmarks();
+    else if(v==="question") html=vQuestion();
+    var showNav = ["home","examList","practiceSetup","wrong","concepts","stats","account","search","bookmarks"].indexOf(v)>=0;
     app.innerHTML = html + (showNav? vNav() : "");
     bind();
     if(v==="quiz" && S.mode==="exam") startExamTimer();
@@ -264,12 +267,14 @@
     h+='<div class="hero"><div class="kword">KOREAN HISTORY · LEVEL 2</div>'+
        '<h2>한능검 2급<br>합격 마스터</h2>'+
        '<p>모의고사 '+Object.keys(ED).length+'회 · '+ALL.length+'문항 · 해설 · 오답노트</p></div>';
+    h+='<div style="display:flex;gap:8px;margin:14px 0"><input id="homeSearch" class="lginput" style="margin:0;flex:1;width:auto" placeholder="🔍 문제 검색 (예: 신문왕, 갑오개혁)"><button class="btn primary" data-dosearch="1" style="width:auto;padding:0 18px">검색</button></div>';
     h+='<div class="grid">'+
       tile("exam","📝","모의고사",Object.keys(ED).length+"회분 · 자동채점·급환산")+
       tile("practice","🎯","영역 연습","13개 영역 랜덤 풀이")+
       tile("wrong","✕","오답노트","틀린 문제 자동 누적")+
       tile("concepts","📌","개념·D-7","시대 뼈대·함정·요약")+
       tile("stats","📊","통계","영역별 약점·점수 추이")+
+      tile("bookmarks","⭐","북마크","즐겨찾기한 문제 복습")+
     '</div>';
     h+='<button class="btn ghost" data-ext="http://tok.historyexam.go.kr/" style="margin-bottom:12px">🏛️ 공식 기출문제 풀기 (국사편찬위·무료)</button>';
     h+='<div class="card"><div class="row"><div><div class="muted" style="font-size:12px">학습 현황</div>'+
@@ -413,7 +418,7 @@
     });
     h+='</div>';
     h+='<button class="btn primary" data-review="1">📖 문항별 해설 보기</button>';
-    h+='<div class="btnrow" style="margin-top:10px"><button class="btn ghost sm" data-retry="'+r.exam+'">다시 풀기</button><button class="btn ghost sm" data-go="home">홈으로</button></div>';
+    h+='<div class="btnrow" style="margin-top:10px"><button class="btn ghost sm" data-retry="'+r.exam+'">다시 풀기</button><button class="btn ghost sm" data-share="1">📤 공유</button><button class="btn ghost sm" data-go="home">홈</button></div>';
     return h;
   }
 
@@ -426,7 +431,8 @@
       var ch=r.answers[i], ok=(ch===q.answer);
       if(only&&ok) return;
       h+='<div class="card"><div class="qtop"><span class="tag">'+esc(q.area)+'</span><span class="muted" style="font-size:12px">'+(i+1)+'번</span>'+
-         '<span class="pill '+(ok?"":"")+'" style="background:'+(ok?"#e9f3ec":"#f7e7e3")+';color:'+(ok?"#1f7a4d":"#b04434")+'">'+(ok?"정답":"오답")+'</span></div>';
+         '<span class="pill" style="background:'+(ok?"#e9f3ec":"#f7e7e3")+';color:'+(ok?"#1f7a4d":"#b04434")+'">'+(ok?"정답":"오답")+'</span>'+
+         '<button class="btn-back" data-bm="'+esc(q.src)+'" style="background:none;padding:2px 6px;font-size:15px">'+(isBm(q.src)?"⭐":"☆")+'</button></div>';
       if(q.passage) h+='<div class="passage">'+esc(q.passage)+'</div>';
       h+='<div class="qtext" style="font-size:15px">'+esc(q.q)+'</div>';
       for(var k=0;k<q.options.length;k++){ var n=k+1,cls="opt";
@@ -456,6 +462,53 @@
       h+='</div>';
     });
     return h;
+  }
+
+  // -------- 검색 / 북마크 / 공유 --------
+  function bmList(){ return load(pkey("bm"),[]); }
+  function isBm(src){ return bmList().indexOf(src)>=0; }
+  function toggleBm(src){ var b=bmList(), i=b.indexOf(src); if(i>=0) b.splice(i,1); else b.unshift(src); save(pkey("bm"),b); return i<0; }
+  function searchHits(q){
+    q=(q||"").trim().toLowerCase(); if(!q) return [];
+    var hits=[];
+    for(var i=0;i<ALL.length;i++){ var x=ALL[i];
+      var hay=((x.q||"")+" "+(x.passage||"")+" "+(x.options||[]).join(" ")+" "+(x.area||"")+" "+(x.keyword||"")).toLowerCase();
+      if(hay.indexOf(q)>=0){ hits.push(x); if(hits.length>=80) break; } }
+    return hits;
+  }
+  function vSearch(){
+    var h=header("문제 검색","home"), q=S.searchQ||"";
+    h+='<div style="display:flex;gap:8px;margin-bottom:12px"><input id="sq" class="lginput" style="margin:0;flex:1;width:auto" value="'+esc(q)+'" placeholder="키워드 (예: 신문왕, 대동법)"><button class="btn primary" data-dosearch2="1" style="width:auto;padding:0 18px">검색</button></div>';
+    if(q){ var hits=searchHits(q);
+      h+='<div class="kbar">"'+esc(q)+'" 결과 '+hits.length+'개'+(hits.length>=80?" (상위 80)":"")+'</div>';
+      if(!hits.length) h+='<div class="card center muted" style="padding:24px">검색 결과가 없어요.</div>';
+      hits.forEach(function(x){ h+='<div class="card" data-q="'+esc(x.src)+'" style="cursor:pointer;padding:13px"><div class="qtop"><span class="tag">'+esc(x.area)+'</span><span class="muted" style="font-size:12px">'+esc(String(x.exam))+'회 '+x.n+'번</span>'+(isBm(x.src)?'<span class="pill gold">⭐</span>':'')+'</div><div style="font-size:14px;font-weight:600;margin-top:3px">'+esc((x.q||"").slice(0,60))+((x.q||"").length>60?"…":"")+'</div></div>'; });
+    } else { h+='<div class="card center muted" style="padding:24px">키워드를 입력해 '+ALL.length+'문항을 검색하세요.</div>'; }
+    return h;
+  }
+  function vQuestion(){
+    var x=BYSRC[S.viewQ], back=S.qBack||"search", h=header("문제 보기",back);
+    if(!x){ h+='<div class="card">문제를 찾을 수 없어요.</div>'; return h; }
+    h+='<div class="qtop"><span class="tag">'+esc(x.area)+'</span><span class="muted" style="font-size:12px">'+esc(String(x.exam))+'회 '+x.n+'번</span><button class="btn-back" data-bm="'+esc(x.src)+'" style="background:none;padding:2px 8px;font-size:15px">'+(isBm(x.src)?"⭐ 북마크됨":"☆ 북마크")+'</button></div>';
+    if(x.passage) h+='<div class="passage">'+esc(x.passage)+'</div>';
+    h+='<div class="qtext">'+esc(x.q)+'</div>';
+    for(var k=0;k<x.options.length;k++){ var cls="opt"+((k+1)===x.answer?" correct":""); h+='<div class="'+cls+'"><span class="num">'+CIRC[k]+'</span><span>'+esc(x.options[k])+'</span></div>'; }
+    h+=explBlock(x);
+    return h;
+  }
+  function vBookmarks(){
+    var b=bmList(), h=header("북마크","home");
+    if(!b.length){ h+='<div class="card center" style="padding:30px 16px"><div style="font-size:30px">⭐</div><div style="font-weight:800;margin-top:8px">북마크가 없어요</div><div class="muted" style="font-size:13px">문제 보기·해설에서 ☆를 눌러 즐겨찾기하세요.</div></div>'; return h; }
+    h+='<div class="kbar">북마크 '+b.length+'개</div>';
+    b.forEach(function(s){ var x=BYSRC[s]; if(!x)return; h+='<div class="card" data-q="'+esc(s)+'" data-qback="bookmarks" style="cursor:pointer;padding:13px"><div class="qtop"><span class="tag">'+esc(x.area)+'</span><span class="muted" style="font-size:12px">'+esc(String(x.exam))+'회 '+x.n+'번</span></div><div style="font-size:14px;font-weight:600;margin-top:3px">'+esc((x.q||"").slice(0,60))+((x.q||"").length>60?"…":"")+'</div></div>'; });
+    return h;
+  }
+  function shareResult(){
+    var r=S.lastResult; if(!r) return; var g=gradeOf(r.correct);
+    var txt="한능검 2급 모의고사 "+r.exam+"회: "+r.correct+"/"+r.total+" (예상 "+g.label+") — 한능검 2급 합격 마스터 앱";
+    if(navigator.share){ navigator.share({title:"한능검 2급 모의고사 결과",text:txt}).catch(function(){}); }
+    else if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(function(){toast("결과를 클립보드에 복사했어요");}).catch(function(){toast("공유: "+txt);}); }
+    else { toast("공유: "+txt); }
   }
 
   // -------- 로그인 / 계정 / 설정 --------
@@ -593,6 +646,13 @@
     app.querySelectorAll("[data-ext]").forEach(function(e){e.onclick=function(){window.open(e.getAttribute("data-ext"),"_blank","noopener");};});
     app.querySelectorAll("[data-practice-area]").forEach(function(e){e.onclick=function(){ startPractice(e.getAttribute("data-practice-area"), 10); };});
     app.querySelectorAll("[data-login]").forEach(function(e){e.onclick=function(){ doLogin(e.getAttribute("data-login")); };});
+    app.querySelectorAll("[data-q]").forEach(function(e){e.onclick=function(){ S.viewQ=e.getAttribute("data-q"); S.qBack=e.getAttribute("data-qback")||"search"; go("question"); };});
+    app.querySelectorAll("[data-bm]").forEach(function(e){e.onclick=function(ev){ ev.stopPropagation(); var on=toggleBm(e.getAttribute("data-bm")); e.textContent=(S.view==="question")?(on?"⭐ 북마크됨":"☆ 북마크"):(on?"⭐":"☆"); toast(on?"북마크 추가":"북마크 해제"); };});
+    var dse=app.querySelector("[data-dosearch]"); if(dse) dse.onclick=function(){ var el=document.getElementById("homeSearch"); S.searchQ=el?el.value:""; go("search"); };
+    var dse2=app.querySelector("[data-dosearch2]"); if(dse2) dse2.onclick=function(){ var el=document.getElementById("sq"); S.searchQ=el?el.value:""; render(); };
+    var shb=app.querySelector("[data-share]"); if(shb) shb.onclick=shareResult;
+    var hsEl=document.getElementById("homeSearch"); if(hsEl) hsEl.onkeydown=function(ev){ if(ev.key==="Enter"){ S.searchQ=hsEl.value; go("search"); } };
+    var sqEl=document.getElementById("sq"); if(sqEl) sqEl.onkeydown=function(ev){ if(ev.key==="Enter"){ S.searchQ=sqEl.value; render(); } };
     app.querySelectorAll("[data-fontsize]").forEach(function(e){e.onclick=function(){ setFont(e.getAttribute("data-fontsize")); };});
     app.querySelectorAll("[data-switch]").forEach(function(e){e.onclick=function(){ setCur(e.getAttribute("data-switch")); go("home"); };});
     var loBtn=app.querySelector("[data-logout]"); if(loBtn) loBtn.onclick=function(){ setCur(null); S.loginMode=null; go("login"); };
