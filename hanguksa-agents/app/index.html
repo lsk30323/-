@@ -215,13 +215,14 @@
     var h=header("한능검 2급 합격 마스터",null);
     h+='<div class="hero"><div class="kword">KOREAN HISTORY · LEVEL 2</div>'+
        '<h2>한능검 2급<br>합격 마스터</h2>'+
-       '<p>모의고사 5회 · 250문항 · 해설 · 오답노트</p></div>';
+       '<p>모의고사 '+Object.keys(ED).length+'회 · '+ALL.length+'문항 · 해설 · 오답노트</p></div>';
     h+='<div class="grid">'+
-      tile("exam","📝","모의고사","5회분 · 자동채점·급환산")+
+      tile("exam","📝","모의고사",Object.keys(ED).length+"회분 · 자동채점·급환산")+
       tile("practice","🎯","영역 연습","13개 영역 랜덤 풀이")+
       tile("wrong","✕","오답노트","틀린 문제 자동 누적")+
       tile("concepts","📌","개념·D-7","시대 뼈대·함정·요약")+
     '</div>';
+    h+='<button class="btn ghost" data-ext="http://tok.historyexam.go.kr/" style="margin-bottom:12px">🏛️ 공식 기출문제 풀기 (국사편찬위·무료)</button>';
     h+='<div class="card"><div class="row"><div><div class="muted" style="font-size:12px">학습 현황</div>'+
        '<div style="font-weight:800;margin-top:2px">응시 '+taken+'회 · 최고 '+best+'/50 · 오답 '+wn+'개</div></div>'+
        '<span class="pill gold">2급 목표 40개</span></div></div>';
@@ -438,6 +439,7 @@
     app.querySelectorAll("[data-theme-toggle]").forEach(function(e){e.onclick=toggleTheme;});
     app.querySelectorAll("[data-nav]").forEach(function(e){e.onclick=function(){go(e.getAttribute("data-nav"));};});
     app.querySelectorAll("[data-tile]").forEach(function(e){e.onclick=function(){var t=e.getAttribute("data-tile");go(t==="exam"?"examList":t==="practice"?"practiceSetup":t);};});
+    app.querySelectorAll("[data-ext]").forEach(function(e){e.onclick=function(){window.open(e.getAttribute("data-ext"),"_blank","noopener");};});
     app.querySelectorAll("[data-exam]").forEach(function(e){e.onclick=function(){startExam(e.getAttribute("data-exam"));};});
     var ib=document.getElementById("installBtn"); if(ib) ib.onclick=function(){ if(deferredPrompt){deferredPrompt.prompt();deferredPrompt=null;} };
 
