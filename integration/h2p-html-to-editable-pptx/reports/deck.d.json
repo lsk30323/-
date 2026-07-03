@@ -1,0 +1,11 @@
+{
+ "layerD_layout": {
+  "pass": true,
+  "objects": 19,
+  "bySeverity": {
+   "ok": 19
+  },
+  "worstIoU": 0.996,
+  "detail": []
+ }
+}

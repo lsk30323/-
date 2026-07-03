@@ -1,0 +1,57 @@
+From bca17f8d2d53ce375b8cf343fbb331de33af0b47 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 3 Jul 2026 12:23:21 +0000
+Subject: [PATCH 3/4] fix: stdlib fallback when the extract-text CLI is absent
+ (Layer A)
+
+The h2p container provided an extract-text CLI for pptx text dumping.
+Generic environments lack it, which made Layer A unverifiable. Fall back
+to a stdlib zipfile+regex extractor over each slide part's <a:t> runs,
+emitting the identical '## Slide N' format. Verified: identical Layer A
+results (jaccard 1.0 x3, sourceLines 19/14/3) via the fallback path.
+
+Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01Gcgys3b7VQXjNZ4dEzos8n
+---
+ src/validate/validate_ab.py | 23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/src/validate/validate_ab.py b/src/validate/validate_ab.py
+index 4b2730e..c83d5c4 100644
+--- a/src/validate/validate_ab.py
++++ b/src/validate/validate_ab.py
+@@ -37,9 +37,30 @@ def html_slide_lines(path):
+         out.append(Counter(g.lines))
+     return out
+ 
++def fallback_extract_text(path):
++    """Integration fallback: the original h2p container shipped an `extract-text`
++    CLI ('## Slide N' + one text line per run). Environments without it get the
++    same format from stdlib zipfile+regex over each slide part's <a:t> runs."""
++    z = zipfile.ZipFile(path)
++    slides = sorted((n for n in z.namelist()
++                     if re.fullmatch(r"ppt/slides/slide\d+\.xml", n)),
++                    key=lambda n: int(re.search(r"\d+", n).group()))
++    lines = []
++    for i, name in enumerate(slides, 1):
++        lines.append(f"## Slide {i}")
++        xml = z.read(name).decode("utf-8")
++        for m in re.finditer(r"<a:t>([^<]*)</a:t>", xml):
++            import html as _html
++            t = _html.unescape(m.group(1))
++            if t.strip(): lines.append(t)
++    return "\n".join(lines)
++
+ def pptx_slide_lines(path):
+     """Per-slide Counters from extract-text '## Slide N' blocks."""
+-    out_txt = subprocess.run(["extract-text", path], capture_output=True, text=True).stdout
++    try:
++        out_txt = subprocess.run(["extract-text", path], capture_output=True, text=True).stdout
++    except FileNotFoundError:
++        out_txt = fallback_extract_text(path)
+     slides, cur = [], None
+     for l in out_txt.splitlines():
+         if l.startswith("## Slide"):
+-- 
+2.43.0
+

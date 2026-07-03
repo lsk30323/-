@@ -1,0 +1,751 @@
+{
+ "irVersion": "1.2.0",
+ "pagePx": {
+  "w": 1280.0,
+  "h": 720.0
+ },
+ "slides": [
+  {
+   "background": "0F1729",
+   "nodes": [
+    {
+     "sourceRef": "page>PageBox>html>body>section>p",
+     "semanticType": "text",
+     "bbox": {
+      "x": 80.0,
+      "y": 48.0,
+      "w": 420.8,
+      "h": 57.9
+     },
+     "style": {
+      "fontSizePx": 40.0,
+      "fontFamily": "Noto Sans CJK KR",
+      "fontWeight": 700,
+      "color": "4ECCA3"
+     },
+     "text": "08 AI Project: ReCoCo",
+     "irVersion": "1.2.0",
+     "zIndex": 0
+    },
+    {
+     "sourceRef": "page>PageBox>html>body>section>p",
+     "semanticType": "text",
+     "bbox": {
+      "x": 80.0,
+      "y": 104.0,
+      "w": 365.2,
+      "h": 29.0
+     },
+     "style": {
+      "fontSizePx": 20.0,
+      "fontFamily": "Noto Sans CJK KR",
+      "fontWeight": 400,
+      "color": "788CA0"
+     },
+     "text": "iOS 사진 삭제 추천 서비스 — Before / After",
+     "irVersion": "1.2.0",
+     "zIndex": 1
+    },
+    {
+     "sourceRef": "page>PageBox>html>body>section>p",
+     "semanticType": "text",
+     "bbox": {
+      "x": 940.0,
+      "y": 120.0,
+      "w": 90.7,
+      "h": 40.5
+     },
+     "style": {
+      "fontSizePx": 28.0,
+      "fontFamily": "Noto Sans CJK KR",
+      "fontWeight": 700,
+      "color": "E8E8E8",
+      "opacity": 0.35
+     },
+     "text": "DRAFT",
+     "irVersion": "1.2.0",
+     "zIndex": 2
+    },
+    {
+     "sourceRef": "page>PageBox>html>body>section>img",
+     "semanticType": "image",
+     "bbox": {
+      "x": 1136.0,
+      "y": 48.0,
+      "w": 64.0,
+      "h": 64.0
+     },
+     "style": {
+      "fontSizePx": 16,
+      "fontFamily": "Noto Sans CJK KR",
+      "fontWeight": 400,
+      "color": "000000"
+     },
+     "src": "/home/user/html-to-editable-pptx/fixtures/logo.png",
+     "md5": "8b405395e532c046adf8205142f71939",
+     "irVersion": "1.2.0",
+     "zIndex": 3
+    },
+    {
+     "sourceRef": "page>PageBox>html>body>section>div",
+     "semanticType": "shape",
+     "bbox": {
+      "x": 80.0,
+      "y": 160.0,
+      "w": 1120.0,
+      "h": 470.0
+     },
+     "style": {
+      "fontSizePx": 16,
+      "fontFamily": "Noto Sans CJK KR",
+      "fontWeight": 400,
+      "color": "000000",
+      "fillColor": "16213E",
+      "borderWidthPx": 2.0,
+      "borderColor": "4ECCA3",
+      "borderRadiusPx": 16.0
+     },
+     "shape": "roundRect",
+     "irVersion": "1.2.0",
+     "zIndex": 4
+    },
+    {
+     "sourceRef": "page>PageBox>html>body>section>table>table",
+     "semanticType": "table",
+     "bbox": {
+      "x": 120.0,
+      "y": 190.0,
+      "w": 1040.0,
+      "h": 324.5
+     },
+     "style": {
+      "fontSizePx": 16,
+      "fontFamily": "Noto Sans CJK KR",
+      "fontWeight": 400,
+      "color": "000000"
+     },
+     "rows": [
+      [
+       {
+        "text": "개선 전후 비교",
+        "style": {
+         "fontSizePx": 18.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 700,
+         "color": "4ECCA3",
+         "align": "center"
+        },
+        "colspan": 2
+       }
+      ],
+      [
+       {
+        "text": "Before",
+        "style": {
+         "fontSizePx": 18.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 700,
+         "color": "4ECCA3",
+         "align": "center"
+        }
+       },
+       {
+        "text": "After",
+        "style": {
+         "fontSizePx": 18.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 700,
+         "color": "4ECCA3",
+         "align": "center"
+        }
+       }
+      ],
+      [
+       {
+        "text": "JS 메인 스레드 랭킹 동기 실행, UI 차단",
+        "style": {
+         "fontSizePx": 15.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 400,
+         "color": "E8E8E8",
+         "align": "center"
+        }
+       },
+       {
+        "text": "Native Day-key 브랜치, JS 브릿지 대기 제거",
+        "style": {
+         "fontSizePx": 15.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 400,
+         "color": "E8E8E8",
+         "align": "center"
+        }
+       }
+      ],
+      [
+       {
+        "text": "AI 앱 오픈과 동시 실행, 런처 속도 저해",
+        "style": {
+         "fontSizePx": 15.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 400,
+         "color": "E8E8E8",
+         "align": "center"
+        }
+       },
+       {
+        "text": "AI 실행 경로 완전 분리, 기록 의도 시점에만 실행",
+        "style": {
+         "fontSizePx": 15.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 400,
+         "color": "E8E8E8",
+         "align": "center"
+        }
+       }
+      ],
+      [
+       {
+        "text": "캐시 히트 시 재빌드, 인코딩 오버헤드",
+        "style": {
+         "fontSizePx": 15.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 400,
+         "color": "E8E8E8",
+         "align": "center"
+        }
+       },
+       {
+        "text": "Render-ready 화면 캐시, 히트 즉시 렌더링",
+        "style": {
+         "fontSizePx": 15.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 400,
+         "color": "E8E8E8",
+         "align": "center"
+        }
+       }
+      ],
+      [
+       {
+        "text": "실행 시 사진첩 전체 스캔, Cold Start 지연",
+        "style": {
+         "fontSizePx": 15.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 400,
+         "color": "E8E8E8",
+         "align": "center"
+        }
+       },
+       {
+        "text": "백그라운드 사전 큐레이션, 미리 준비",
+        "style": {
+         "fontSizePx": 15.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 400,
+         "color": "E8E8E8",
+         "align": "center"
+        }
+       }
+      ],
+      [
+       {
+        "text": "데이터 로드 시점 측정, p95 신뢰 불가",
+        "style": {
+         "fontSizePx": 15.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 400,
+         "color": "E8E8E8",
+         "align": "center"
+        }
+       },
+       {
+        "text": "Paint 지점 계측 도입, 실제 렌더 기준",
+        "style": {
+         "fontSizePx": 15.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 400,
+         "color": "E8E8E8",
+         "align": "center"
+        }
+       }
+      ],
+      [
+       {
+        "text": "기록·스킵 액션 미반영, 동일 사진 반복 노출",
+        "style": {
+         "fontSizePx": 15.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 400,
+         "color": "E8E8E8",
+         "align": "center"
+        }
+       },
+       {
+        "text": "통합 뮤테이션 클로저, 모든 액션 즉시 반영",
+        "style": {
+         "fontSizePx": 15.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 400,
+         "color": "E8E8E8",
+         "align": "center"
+        }
+       }
+      ]
+     ],
+     "colWidthsPx": [
+      498.7,
+      541.3
+     ],
+     "rowHeightsPx": [
+      45.1,
+      46.1,
+      39.2,
+      38.7,
+      38.7,
+      38.7,
+      38.7,
+      38.7
+     ],
+     "irVersion": "1.2.0",
+     "zIndex": 5
+    },
+    {
+     "sourceRef": "page>PageBox>html>body>section>div>div",
+     "semanticType": "shape",
+     "bbox": {
+      "x": 100.0,
+      "y": 596.0,
+      "w": 160.0,
+      "h": 22.0
+     },
+     "style": {
+      "fontSizePx": 16,
+      "fontFamily": "Noto Sans CJK KR",
+      "fontWeight": 400,
+      "color": "000000",
+      "fillColor": "2A8F6F"
+     },
+     "shape": "rect",
+     "irVersion": "1.2.0",
+     "zIndex": 6
+    },
+    {
+     "sourceRef": "page>PageBox>html>body>section>p",
+     "semanticType": "text",
+     "bbox": {
+      "x": 80.0,
+      "y": 656.0,
+      "w": 286.3,
+      "h": 23.2
+     },
+     "style": {
+      "fontSizePx": 16.0,
+      "fontFamily": "Noto Sans CJK KR",
+      "fontWeight": 400,
+      "color": "788CA0"
+     },
+     "text": "2026.01 - 진행중 | 2인 (현업 IT임원 + 본인)",
+     "irVersion": "1.2.0",
+     "zIndex": 7
+    }
+   ]
+  },
+  {
+   "background": "0F1729",
+   "nodes": [
+    {
+     "sourceRef": "page>PageBox>html>body>section>p",
+     "semanticType": "text",
+     "bbox": {
+      "x": 80.0,
+      "y": 48.0,
+      "w": 156.3,
+      "h": 57.9
+     },
+     "style": {
+      "fontSizePx": 40.0,
+      "fontFamily": "Noto Sans CJK KR",
+      "fontWeight": 700,
+      "color": "4ECCA3"
+     },
+     "text": "검증 요약",
+     "irVersion": "1.2.0",
+     "zIndex": 0
+    },
+    {
+     "sourceRef": "page>PageBox>html>body>section>p",
+     "semanticType": "text",
+     "bbox": {
+      "x": 80.0,
+      "y": 104.0,
+      "w": 203.1,
+      "h": 29.0
+     },
+     "style": {
+      "fontSizePx": 20.0,
+      "fontFamily": "Noto Sans CJK KR",
+      "fontWeight": 400,
+      "color": "788CA0"
+     },
+     "text": "3-layer validation 결과",
+     "irVersion": "1.2.0",
+     "zIndex": 1
+    },
+    {
+     "sourceRef": "page>PageBox>html>body>section>div",
+     "semanticType": "shape",
+     "bbox": {
+      "x": 80.0,
+      "y": 160.0,
+      "w": 1120.0,
+      "h": 470.0
+     },
+     "style": {
+      "fontSizePx": 16,
+      "fontFamily": "Noto Sans CJK KR",
+      "fontWeight": 400,
+      "color": "000000",
+      "fillColor": "16213E",
+      "borderWidthPx": 2.0,
+      "borderColor": "4ECCA3",
+      "borderRadiusPx": 16.0
+     },
+     "shape": "roundRect",
+     "irVersion": "1.2.0",
+     "zIndex": 2
+    },
+    {
+     "sourceRef": "page>PageBox>html>body>section>table>table",
+     "semanticType": "table",
+     "bbox": {
+      "x": 120.0,
+      "y": 200.0,
+      "w": 1040.0,
+      "h": 162.2
+     },
+     "style": {
+      "fontSizePx": 16,
+      "fontFamily": "Noto Sans CJK KR",
+      "fontWeight": 400,
+      "color": "000000"
+     },
+     "rows": [
+      [
+       {
+        "text": "구분",
+        "style": {
+         "fontSizePx": 18.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 700,
+         "color": "4ECCA3",
+         "align": "center"
+        }
+       },
+       {
+        "text": "레이어",
+        "style": {
+         "fontSizePx": 18.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 700,
+         "color": "4ECCA3",
+         "align": "center"
+        }
+       },
+       {
+        "text": "결과",
+        "style": {
+         "fontSizePx": 18.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 700,
+         "color": "4ECCA3",
+         "align": "center"
+        }
+       }
+      ],
+      [
+       {
+        "text": "의미 계층",
+        "style": {
+         "fontSizePx": 15.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 400,
+         "color": "E8E8E8",
+         "align": "center"
+        },
+        "rowspan": 2
+       },
+       {
+        "text": "A 텍스트 보존",
+        "style": {
+         "fontSizePx": 15.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 400,
+         "color": "E8E8E8",
+         "align": "center"
+        }
+       },
+       {
+        "text": "17/17 보존",
+        "style": {
+         "fontSizePx": 15.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 400,
+         "color": "E8E8E8",
+         "align": "center"
+        }
+       }
+      ],
+      [
+       {
+        "text": "B 미디어 무결성",
+        "style": {
+         "fontSizePx": 15.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 400,
+         "color": "E8E8E8",
+         "align": "center"
+        }
+       },
+       {
+        "text": "MD5 1/1 일치",
+        "style": {
+         "fontSizePx": 15.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 400,
+         "color": "E8E8E8",
+         "align": "center"
+        }
+       }
+      ],
+      [
+       {
+        "text": "시각 계층",
+        "style": {
+         "fontSizePx": 15.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 400,
+         "color": "E8E8E8",
+         "align": "center"
+        }
+       },
+       {
+        "text": "C 픽셀 diff",
+        "style": {
+         "fontSizePx": 15.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 400,
+         "color": "E8E8E8",
+         "align": "center"
+        }
+       },
+       {
+        "text": "2.85% (기준 5%)",
+        "style": {
+         "fontSizePx": 15.0,
+         "fontFamily": "Noto Sans CJK KR",
+         "fontWeight": 400,
+         "color": "E8E8E8",
+         "align": "center"
+        }
+       }
+      ]
+     ],
+     "colWidthsPx": [
+      259.1,
+      375.9,
+      405.0
+     ],
+     "rowHeightsPx": [
+      45.1,
+      39.2,
+      38.7,
+      38.7
+     ],
+     "irVersion": "1.2.0",
+     "zIndex": 3
+    },
+    {
+     "sourceRef": "page>PageBox>html>body>section>p",
+     "semanticType": "text",
+     "bbox": {
+      "x": 80.0,
+      "y": 656.0,
+      "w": 272.1,
+      "h": 23.2
+     },
+     "style": {
+      "fontSizePx": 16.0,
+      "fontFamily": "Noto Sans CJK KR",
+      "fontWeight": 400,
+      "color": "788CA0"
+     },
+     "text": "editability score 1.0 | rule-based only",
+     "irVersion": "1.2.0",
+     "zIndex": 4
+    }
+   ]
+  },
+  {
+   "background": "0F1729",
+   "nodes": [
+    {
+     "sourceRef": "page>PageBox>html>body>section>p",
+     "semanticType": "text",
+     "bbox": {
+      "x": 80.0,
+      "y": 48.0,
+      "w": 193.1,
+      "h": 57.9
+     },
+     "style": {
+      "fontSizePx": 40.0,
+      "fontFamily": "Noto Sans CJK KR",
+      "fontWeight": 700,
+      "color": "4ECCA3"
+     },
+     "text": "월별 처리량",
+     "irVersion": "1.2.0",
+     "zIndex": 0
+    },
+    {
+     "sourceRef": "page>PageBox>html>body>section>p",
+     "semanticType": "text",
+     "bbox": {
+      "x": 80.0,
+      "y": 104.0,
+      "w": 366.2,
+      "h": 29.0
+     },
+     "style": {
+      "fontSizePx": 20.0,
+      "fontFamily": "Noto Sans CJK KR",
+      "fontWeight": 400,
+      "color": "788CA0"
+     },
+     "text": "rule-based chart recovery — 두 가지 티어",
+     "irVersion": "1.2.0",
+     "zIndex": 1
+    },
+    {
+     "sourceRef": "page>PageBox>html>body>section>div",
+     "semanticType": "shape",
+     "bbox": {
+      "x": 80.0,
+      "y": 160.0,
+      "w": 1120.0,
+      "h": 470.0
+     },
+     "style": {
+      "fontSizePx": 16,
+      "fontFamily": "Noto Sans CJK KR",
+      "fontWeight": 400,
+      "color": "000000",
+      "fillColor": "16213E",
+      "borderWidthPx": 2.0,
+      "borderColor": "4ECCA3",
+      "borderRadiusPx": 16.0
+     },
+     "shape": "roundRect",
+     "irVersion": "1.2.0",
+     "zIndex": 2
+    },
+    {
+     "sourceRef": "page>PageBox>html>body>section>{http://www.w3.org/2000/svg}svg",
+     "semanticType": "chart",
+     "bbox": {
+      "x": 140.0,
+      "y": 220.0,
+      "w": 460.0,
+      "h": 320.0
+     },
+     "style": {
+      "fontSizePx": 16,
+      "fontFamily": "Noto Sans CJK KR",
+      "fontWeight": 400,
+      "color": "000000"
+     },
+     "dataSource": "attr",
+     "chartType": "bar",
+     "categories": [
+      "1월",
+      "2월",
+      "3월",
+      "4월"
+     ],
+     "series": [
+      {
+       "name": "처리 건수",
+       "values": [
+        120,
+        180,
+        150,
+        210
+       ],
+       "color": "4ecca3"
+      }
+     ],
+     "irVersion": "1.2.0",
+     "zIndex": 3
+    },
+    {
+     "sourceRef": "page>PageBox>html>body>section>{http://www.w3.org/2000/svg}svg",
+     "semanticType": "chart",
+     "bbox": {
+      "x": 680.0,
+      "y": 220.0,
+      "w": 460.0,
+      "h": 320.0
+     },
+     "style": {
+      "fontSizePx": 16,
+      "fontFamily": "Noto Sans CJK KR",
+      "fontWeight": 400,
+      "color": "000000"
+     },
+     "dataSource": "svg-marks",
+     "chartType": "bar",
+     "categories": [
+      "Q1",
+      "Q2",
+      "Q3",
+      "Q4"
+     ],
+     "series": [
+      {
+       "name": "Series 1",
+       "values": [
+        103.64,
+        153.64,
+        53.64,
+        203.64
+       ],
+       "color": "2a8f6f"
+      }
+     ],
+     "irVersion": "1.2.0",
+     "zIndex": 4
+    },
+    {
+     "sourceRef": "page>PageBox>html>body>section>p",
+     "semanticType": "text",
+     "bbox": {
+      "x": 80.0,
+      "y": 656.0,
+      "w": 446.3,
+      "h": 23.2
+     },
+     "style": {
+      "fontSizePx": 16.0,
+      "fontFamily": "Noto Sans CJK KR",
+      "fontWeight": 400,
+      "color": "788CA0"
+     },
+     "text": "tier1: data-* 속성 (source first) | tier2: SVG 마크 + 축 스케일 역산",
+     "irVersion": "1.2.0",
+     "zIndex": 5
+    }
+   ]
+  }
+ ]
+}

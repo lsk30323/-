@@ -1,0 +1,462 @@
+From 4986890243273f0fa5065953ee361f9857107192 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 3 Jul 2026 12:23:22 +0000
+Subject: [PATCH 4/4] docs: h2p integration work order, lessons, handoff
+ provenance, README status
+
+- docs/h2p_integration_work_order_v0.1.md: semantic comparison, structural
+  set analysis (intersection/union/conflicts), dependency graph, executed
+  steps, verification results (all four gates green), owner push/PR
+  instructions, post-merge roadmap
+- docs/lessons.md: 15 h2p lessons + 2 integration lessons (subtree over
+  vendor dir; regenerated fixture asset)
+- docs/HANDOFF.md: original h2p handoff imported as provenance record
+  (paths updated to src/mapper and the subtree prefix)
+- README.md: implementation-status section with run instructions
+
+Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01Gcgys3b7VQXjNZ4dEzos8n
+---
+ README.md                               |  16 +++
+ docs/HANDOFF.md                         | 145 ++++++++++++++++++++++
+ docs/h2p_integration_work_order_v0.1.md | 153 ++++++++++++++++++++++++
+ docs/lessons.md                         |  88 ++++++++++++++
+ 4 files changed, 402 insertions(+)
+ create mode 100644 docs/HANDOFF.md
+ create mode 100644 docs/h2p_integration_work_order_v0.1.md
+ create mode 100644 docs/lessons.md
+
+diff --git a/README.md b/README.md
+index bb4c00e..a5c2c72 100644
+--- a/README.md
++++ b/README.md
+@@ -2,6 +2,22 @@
+ 
+ Editability-first HTML to PPTX parser project.
+ 
++## Implementation status
++
++The working `h2p` pipeline has been merged in (see
++`docs/h2p_integration_work_order_v0.1.md`): WeasyPrint box-tree extraction →
++Visual Object IR v1.2.0 (`src/ir/schema.ts`, invariants I1–I9) → PptxGenJS
++mapping (`src/mapper/`) → 4-layer validation (`src/validate/`, Layers A–D).
++All gates are green on `fixtures/deck.html` (editability score 1.0, 0 fallback).
++
++```bash
++npm ci && pip3 install weasyprint
++# Linux also: apt-get install poppler-utils fonts-noto-cjk libreoffice-impress
++bash run.sh fixtures/deck.html
++```
++
++Read `docs/HANDOFF.md` and `docs/lessons.md` before editing the pipeline.
++
+ The goal is to convert rendered HTML into **editable PowerPoint objects** by combining browser layout extraction, a Visual Object IR, semantic object detection, and PPTX object mapping.
+ 
+ For the top-level purpose of the project — what end the technical
+diff --git a/docs/HANDOFF.md b/docs/HANDOFF.md
+new file mode 100644
+index 0000000..2c5cd59
+--- /dev/null
++++ b/docs/HANDOFF.md
+@@ -0,0 +1,145 @@
++# HANDOFF — html-to-editable-pptx parser (rule-based)
++
++Status date: 2026-06-12 · Sessions completed: 3 · All validation gates GREEN.
++This packet is self-contained: no prior conversation context is required.
++
++> Provenance note (integration): this document is the original h2p handoff,
++> imported verbatim except for path updates (`src/map/` → `src/mapper/`,
++> `vendor/dom-to-pptx/` → `third_party/subtrees/dom-to-pptx/`). It records the
++> state of the working pipeline at the moment it was merged into
++> `goodand/html-to-editable-pptx`. See `docs/h2p_integration_work_order_v0.1.md`.
++
++## 1. Mission and policy
++
++Build an editability-first HTML→PPTX parser. Every recoverable element becomes a
++native, editable PowerPoint object — never a screenshot.
++
++Action priority (highest first): consistency with intent > completion > fast user
++verification > re-reading > reusability > reuse existing > validation > read >
++optimization > copy > deletion > create new.
++
++Hard constraints:
++- **Rule-based only.** No LLM, no multimodal model, no ML at any stage. Same
++  input → byte-identical output, every run.
++- **Reuse before writing.** Sources: `third_party/subtrees/dom-to-pptx` (ideas + one file
++  imported verbatim), the diff-parser mechanisms (bag-of-lines, MD5, Jaccard —
++  already absorbed into `src/validate/`), PptxGenJS/pixelmatch as npm deps.
++- Patch line-by-line (`str_replace`-style edits); read files before editing.
++
++## 2. What exists and works
++
++Pipeline (all implemented, all green on `fixtures/deck.html`, 3 slides / 19 nodes):
++
++```
++HTML ──weasy_extract.py──▶ IR v1.2.0 ──ir_to_pptx.mjs──▶ .pptx
++        (WeasyPrint box tree)   │            (PptxGenJS + subtree normalizer)
++                                └─ masks.json (chart regions for Layer C)
++Validation (run.sh, parallel subflows):
++  Layer A semantic   bag-of-lines + per-slide Jaccard   → missing 0, jaccard 1.0
++  Layer B binary     MD5 media hashing                  → 1/1 matched
++  Layer C visual     pixelmatch, chart bboxes masked    → 3.09 / 1.19 / 1.26 %  (<5 gate)
++  Layer D geometric  IR bbox vs OOXML xfrm IoU          → 19/19 ok, worstIoU 0.996
++  Editability        native objects / total             → 1.0 (19/19, 0 fallback)
++```
++
++Capabilities: multi-slide (`<section class="slide">` + page breaks), tables with
++colspan/rowspan (WeasyPrint `grid_x/colspan/rowspan` attrs), opacity (ancestor
++product → transparency), overflow:hidden clipping (bbox intersection), images
++(MD5-tracked), charts via two rule-based tiers — tier1 `data-*` JSON attrs
++(source-first), tier2 SVG mark + numeric-axis-tick linear scale reverse
++engineering. Unparseable SVG → `fallbackRegion` with reason, never silent.
++
++## 3. Directory map
++
++```
++├── run.sh                  # orchestrator: extract → map → ∥(A+B | render) → C per page → D
++├── setup_mac.sh            # macOS bootstrap (brew poppler/pango/libreoffice, pip weasyprint, npm ci)
++├── package.json / -lock    # pptxgenjs, pixelmatch, pngjs, jszip, @xmldom/xmldom
++├── src/
++│   ├── ir/schema.ts        # IR CONTRACT v1.2.0 — invariants I1–I9 (read first)
++│   ├── ir/validate.js      # runtime validator; mapper refuses invalid IR
++│   ├── extract/weasy_extract.py  # HTML→IR; probe-hardened walk (see §5 footguns)
++│   ├── mapper/ir_to_pptx.mjs  # IR→PPTX; imports subtree normalizer via DOMParser polyfill
++│   └── validate/
++│       ├── validate_ab.py  # Layers A+B (svg blocks excluded from A)
++│       ├── pixel_c.mjs     # Layer C with mask support
++│       └── layout_d.py     # Layer D per-object IoU, sourceRef-addressed report
++├── fixtures/deck.html      # 3-slide acceptance fixture (spans/opacity/clip/charts)
++├── fixtures/slide13.html   # original single-slide fixture
++├── docs/lessons.md         # numbered lessons — REQUIRED READING before editing
++├── third_party/subtrees/dom-to-pptx/  # MIT; only src/pptx-normalizer.js is imported at runtime
++└── out/                    # generated artifacts (see §6)
++```
++
++## 4. How to run
++
++Linux container: deps preinstalled pattern — `pip install weasyprint
++--break-system-packages`, `npm ci`, fonts-noto-cjk, poppler-utils, LibreOffice.
++macOS: `bash setup_mac.sh` once.
++
++```
++bash run.sh fixtures/deck.html
++```
++
++Pass criteria (machine-checkable):
++- `out/deck.ab.json` → `layerA_semantic.pass: true`, every slide `jaccard: 1.0`,
++  `layerB_media.pass: true`
++- stage-4 stdout → each slide `diffPct < 5`
++- `out/deck.d.json` → `layerD_layout.pass: true`, `worstIoU > 0.90`
++- `out/deck.mapreport.json` → `editabilityScore: 1`, `fallback: 0`
++
++## 5. Footguns (violating these caused every bug so far)
++
++1. **Unwrap before classifying.** WeasyPrint wraps absolute-positioned boxes in
++   `AbsolutePlaceholder`; `__getattr__` delegates to `._box`, so class checks
++   pass-through silently. Always `getattr(box, "_box", box)` first.
++2. **Rows are never direct children.** Implicit `TableRowGroupBox` (tbody) sits
++   between `TableBox` and rows — collect recursively.
++3. **Tags can be namespaced.** Inline SVG tag is `{http://...}svg` — match with
++   `tag.endswith("svg")`.
++4. **Style keys drift by version.** v69 renamed `text_align`→`text_align_all`;
++   wrap style reads in try/except.
++5. **Always pass `h:` to addTable.** PptxGenJS defaults graphicFrame `cy` to
++   1 inch; renderers auto-repair so pixel/visual QA pass while the declaration
++   is wrong. Only Layer D catches this class.
++6. **Provenance comes from raw HTML, not the box tree.** Image srcs and chart
++   data are collected by a second stdlib parse, joined by document-order queues.
++   Assumption: traversal order == document order (breaks under CSS reordering).
++
++Companion skill: `skills/software-development/cross-representation-verification/SKILL.md`
++(probe-first / dual-source / declaration-level validation) generalizes these.
++
++## 6. Artifact inventory (out/)
++
++| File | Meaning |
++|---|---|
++| `deck.ir.json` | IR v1.2.0 — slides[].nodes[], the contract instance |
++| `deck.masks.json` | per-slide chart bboxes excluded from Layer C |
++| `deck.pptx` | final deliverable (normalizer-passed, 0 dangling overrides) |
++| `deck.mapreport.json` | node counts, editabilityScore, fallback log |
++| `deck.ab.json` / `deck.d.json` | Layer A+B / Layer D reports |
++| `deck_A-N.png` / `deck_B-N.png` / `deck_diff-N.png` | source render / output render / pixel diff per slide |
++
++## 7. Pending roadmap (priority order)
++
++1. **L4 render-environment pinning** — Docker image pinning fonts-noto-cjk +
++   LibreOffice version; only then tighten Layer C below 5% (cross-renderer font
++   rasterization floor ≈ 2.85%). Blocked in the build container; viable locally.
++2. **CSS z-index** — extractor currently uses DOM paint order only; port
++   dom-to-pptx `sortKey = parent.concat([zVal, order])` composite-key idea.
++3. **Border-radius clipping** — clip stack intersects rectangles only; rounded
++   clips are approximated as rectangular.
++4. **Chart breadth** — line/pie detection (circle/path marks), multi-series
++   (color-grouped rects), legend extraction; keep the two-tier ladder.
++5. **Crop-fallback for unrecoverable SVG** — render source page once, crop the
++   fallbackRegion bbox into an asset-backed image instead of dropping visuals.
++6. **Text transparency check** — `transparency` is passed on addText; verify
++   OOXML alpha lands on text runs across PowerPoint versions (works in LO).
++
++## 8. Verification-first start procedure for the next agent
++
++1. Read `docs/lessons.md`, then `src/ir/schema.ts` (I1–I9).
++2. Run `bash run.sh fixtures/deck.html`; confirm §4 pass criteria before any edit.
++3. Any new element type: write a minimal fixture, PROBE the box tree, then a
++   handler, then extend `fixtures/deck.html` and re-run all four layers.
++4. Record every correction in `docs/lessons.md` (numbered, one-line summary first).
+diff --git a/docs/h2p_integration_work_order_v0.1.md b/docs/h2p_integration_work_order_v0.1.md
+new file mode 100644
+index 0000000..338bb0b
+--- /dev/null
++++ b/docs/h2p_integration_work_order_v0.1.md
+@@ -0,0 +1,153 @@
++# h2p Integration Work Order v0.1
++
++| 항목 | 값 |
++|---|---|
++| Document kind | content document (`_vx.x` rule) + executable work order |
++| Date | 2026-07-03 |
++| Source | `h2p` working pipeline (3 sessions, docs/HANDOFF.md) → this repository |
++| Status | **EXECUTED** — all steps below were performed on branch `feat/h2p-bootstrap-implementation`; all four validation gates GREEN in a fresh Ubuntu 24.04 container |
++| Authority | implementation record; does not amend ULTIMATE_GOAL / GOAL_PROBLEM consensus docs |
++
++## 0. Purpose
++
++Merge the fully working, rule-based HTML→editable-PPTX pipeline (`h2p`) into
++`goodand/html-to-editable-pptx`, which at merge time contained planning docs,
++skills, and third-party manifests but no implementation (`src/` did not exist).
++
++Both codebases are two phases of the same project:
++
++- this repo = bootstrap phase (mission, architecture, reuse policy, subtree decisions)
++- h2p = implementation phase (extractor, IR, mapper, 4-layer validation — all gates green)
++
++## 1. Semantic comparison
++
++| Axis | this repo (bootstrap) | h2p (implemented) | resolution |
++|---|---|---|---|
++| Mission | editability-first HTML→PPTX | same | none needed |
++| Render engine | Playwright (architecture_v0.1) | **WeasyPrint** — deterministic, container-safe (lessons #3) | WeasyPrint is the v0.1 implementation; Playwright stays on the roadmap |
++| IR | `src/ir/schema.ts` recommended placeholder | IR v1.2.0, invariants I1–I9 + runtime validator | h2p schema adopted verbatim |
++| Chart recovery | ChartDetective reference-only (React UI) | working 2-tier rule ladder: `data-*` attrs → SVG mark/axis reverse-engineering | h2p fills the gap; matches README's recommended order (source data first, marks second, asset fallback) |
++| Table extraction | Table Transformer reference-only (PyTorch) | WeasyPrint `grid_x/colspan/rowspan` native attrs | h2p fills the semantic-HTML-table slot; fake-table detection still open |
++| Validation | pixel diff + editability score (planned) | 4 layers A/B/C/D + editabilityScore, all green | h2p system adopted; extends the plan with Layer D (IR-vs-OOXML IoU) |
++| Reuse policy | 2 npm deps + transplant with attribution (reuse_report) | 5 npm deps + one vendor file imported verbatim | dom-to-pptx now a real `git subtree` per `third_party/subtrees.toml` |
++
++GOAL_PROBLEM module slots now implemented: #2 renderQueue→IR (schema.ts), #3 text
++run collector, #4 shape mapper, #5 semantic table extractor, #6 image mapper,
++#7 bbox JSON schema, #8 PPTX output+validation. Slot #1 is implemented via
++WeasyPrint box measurement instead of getBoundingClientRect (same page-absolute
++px contract).
++
++## 2. Structural set analysis
++
++**Intersection** (already shared): mission & priorities, `src/ir|extract|validate`
++layout, PptxGenJS 4.0.1 + pixelmatch as the two adopted runtime backends,
++fallbackRegion concept (I6), editability score, dom-to-pptx as primary donor.
++
++**h2p − repo** (imported by this work order):
++
++```
++src/ir/schema.ts src/ir/validate.js
++src/extract/weasy_extract.py
++src/mapper/ir_to_pptx.mjs
++src/validate/{validate_ab.py, pixel_c.mjs, layout_d.py}
++run.sh setup_mac.sh package.json package-lock.json
++fixtures/{deck.html, slide13.html, logo.png}
++docs/{lessons.md, HANDOFF.md}
++```
++
++**repo − h2p** (untouched planning assets): all `docs/*_v0.x.md` consensus and
++evaluation documents, `docs/git_*`/`*_task*` packets, `skills/**`, `tests/**`,
++`scripts/clone_repos*`, `third_party/repositories.toml` + manifests.
++
++**Conflicts resolved**:
++
++| Conflict | Resolution applied |
++|---|---|
++| h2p `src/map/` vs repo convention `src/mapper/` | renamed to `src/mapper/`; `run.sh` stage 2 updated |
++| h2p `vendor/dom-to-pptx/` (1 file + LICENSE) vs `third_party/subtrees.toml` decision `adopt_subtree, whole_repo` | real `git subtree add --prefix=third_party/subtrees/dom-to-pptx … master --squash` executed; mapper imports `third_party/subtrees/dom-to-pptx/src/pptx-normalizer.js`. The h2p-verified normalizer proved **byte-identical** to upstream master — zero behavioral risk |
++| Playwright pipeline (docs) vs WeasyPrint (code) | reconciliation notes added in `src/extract/README.md`; architecture docs unmodified |
++| repo `.gitignore` minimal | appended `node_modules/`, `out/`, `third_party/repos/` |
++| `extract-text` CLI (h2p container tool) absent in generic environments | stdlib fallback (zipfile+regex over `<a:t>` runs, same `## Slide N` format) added inside `validate_ab.py`, clearly marked, in its own commit |
++
++**Runtime dependency graph**:
++
++```
++fixtures/*.html ─ weasy_extract.py (python: weasyprint 69) ─▶ out/*.ir.json + *.masks.json
++out/*.ir.json ─ ir_to_pptx.mjs (node: pptxgenjs 4.0.1, jszip, @xmldom/xmldom;
++                imports subtree pptx-normalizer verbatim via DOMParser polyfill) ─▶ out/*.pptx
++Validation:  validate_ab.py (stdlib; optional extract-text CLI)          → Layer A+B
++             weasyprint→pdf + soffice(pptx→pdf) + pdftoppm → pixel_c.mjs → Layer C
++             layout_d.py (stdlib zipfile/regex over OOXML xfrm)          → Layer D
++System deps: pango (weasyprint), libreoffice-impress, poppler-utils, fonts-noto-cjk
++```
++
++## 3. Executed steps (reproducible)
++
++1. `git checkout -b feat/h2p-bootstrap-implementation`
++2. `git subtree add --prefix=third_party/subtrees/dom-to-pptx https://github.com/atharva9167j/dom-to-pptx.git master --squash`
++   — handoff v0.2 §4 verification checklist passed (package.json, bin/cli.js, skills/ present).
++3. Copy h2p files per the mapping in §2, with the two path adaptations
++   (`src/mapper/`, subtree import path).
++4. Regenerate `fixtures/logo.png` (the original binary was not recoverable from
++   the handoff packet): deterministic 64×64 PNG, teal `#4ECCA3`, black X
++   diagonals, stdlib `zlib+struct` writer. Layer B hashes source↔embedded of the
++   same file, so the gate is unaffected; historical md5 `efe5d80b…` in archived
++   IR reports differs from the new asset — expected.
++5. Add module READMEs (`src/extract|mapper|validate/README.md`), extend
++   `.gitignore`, append README.md implementation-status section.
++6. Environment (Ubuntu 24.04 container):
++   `apt-get update && apt-get install -y poppler-utils fonts-noto-cjk libreoffice-impress`
++   (stale apt index causes 404s without `update`; **`libreoffice-core` alone
++   cannot load pptx — `-impress` is required**), `pip3 install weasyprint
++   --break-system-packages` (installs 69.0), `npm ci`.
++7. `bash run.sh fixtures/deck.html`
++
++## 4. Verification results (this container, 2026-07-03)
++
++| Gate | Criterion | Result |
++|---|---|---|
++| Layer A semantic | missing=0 per slide | **pass** — jaccard 1.0 / 1.0 / 1.0, sourceLines 19/14/3 |
++| Layer B media | all source assets matched | **pass** — 1/1 (md5) |
++| Layer C visual | diffPct < 5 per slide | **pass** — 3.10% / 1.19% / 1.26% (slide 3: 294,400 chart px masked) |
++| Layer D geometric | no critical, worstIoU > 0.90 | **pass** — 19/19 ok, worstIoU 0.996 |
++| Editability | score 1, fallback 0 | **pass** — 19 native / 0 fallback (text 10, image 1, shape 4, table 2, chart 2) |
++
++Numbers match the original h2p run to within 0.01pp (slide 1: 3.09→3.10%, the
++regenerated logo). The pipeline is deterministic per its rule-based-only policy.
++
++## 5. Owner actions — push & PR (this session had no write access)
++
++Executed from a clone that has these commits (or after `git bundle`/patch apply):
++
++```bash
++git push -u origin feat/h2p-bootstrap-implementation
++# PR title:
++#   feat: port h2p working pipeline (IR v1.2.0, 4-layer validation, all gates green)
++# PR body: link this document; include §4 results table; note the dom-to-pptx
++# subtree import commit is upstream code (MIT) squashed per subtrees.toml.
++```
++
++Transport options (packet ships both). The bundle is primary — the subtree
++import is a **merge commit**, which `format-patch` cannot represent:
++
++```bash
++# Option 1 — bundle (exact history, recommended)
++git fetch h2p-integration.bundle feat/h2p-bootstrap-implementation:feat/h2p-bootstrap-implementation
++git push -u origin feat/h2p-bootstrap-implementation
++
++# Option 2 — patches (4 logical commits only; re-run the subtree step first)
++git checkout -b feat/h2p-bootstrap-implementation main
++git subtree add --prefix=third_party/subtrees/dom-to-pptx \
++  https://github.com/atharva9167j/dom-to-pptx.git master --squash
++git am patches/*.patch
++```
++
++## 6. Roadmap after merge (from HANDOFF §7, still valid)
++
++1. Render-environment pinning (Docker: fonts-noto-cjk + soffice version) → then tighten Layer C gate below 5% (cross-renderer floor ≈ 2.85%).
++2. CSS z-index composite sort key (dom-to-pptx `sortKey` idea).
++3. Border-radius clipping (clip stack is rectangular today).
++4. Chart breadth: line/pie, multi-series, legends — keep the two-tier ladder.
++5. Crop-fallback image for unrecoverable SVG regions.
++6. Playwright extraction path as an alternative front-end producing the same IR (reconciles architecture_v0.1 §2 with the WeasyPrint implementation).
++7. Fake-table detection (bbox clustering per reuse_report bootstrap task #6) — unaddressed by h2p.
+diff --git a/docs/lessons.md b/docs/lessons.md
+new file mode 100644
+index 0000000..a5a7480
+--- /dev/null
++++ b/docs/lessons.md
+@@ -0,0 +1,88 @@
++# Lessons — HTML→PPTX parser (session 1)
++
++1. **AbsolutePlaceholder proxies everything.** WeasyPrint wraps absolutely-positioned
++   boxes; `__getattr__` delegates to `._box`, so class-name checks silently miss them.
++   Unwrap (`getattr(box,'_box',box)`) before classifying. Cost: card shape dropped.
++
++2. **tbody exists even when unwritten.** TableRowBox sits under TableRowGroupBox, never
++   directly under TableBox. Collect rows recursively. Cost: rows=0 on first run.
++
++3. **No browser ≠ no layout engine.** Playwright binaries can't download here
++   (CDN blocked); WeasyPrint (pip) is a deterministic, rule-based CSS layout engine
++   exposing a full box tree with page-absolute coordinates. dom-to-pptx is browser-only
++   (getComputedStyle); its ideas (PX_TO_INCH=1/96, item-type dispatch, paint-order z)
++   ported instead of its code.
++
++4. **The diff parser is the regression gate.** bag-of-lines (Counter, whitespace-norm)
++   gave a zero-config Layer-A check: 17/17 source lines preserved, 0 invented.
++   MD5 hashing gave Layer B for free. Jaccard reserved for multi-slide regression.
++
++5. **Cross-renderer pixel diff has a floor.** WeasyPrint vs LibreOffice font rasterizing
++   alone produced ~2.85% mismatch on a passing slide. Per critique #15, pin the render
++   environment (Docker + fonts-noto-cjk + soffice version) before tightening the 5% gate.
++
++6. **v69 API drift.** `text_align` → `text_align_all`. Style keys are version-coupled;
++   guard with try/except and record the probe output.
++
++# Session 2 — improvement roadmap implementation
++
++7. **RasterImage hides its URL.** WeasyPrint's replaced-box `.replacement` (RasterImage)
++   exposes no source path. Rule-based fix: parse `<img src>` from raw HTML in document
++   order (stdlib HTMLParser) and consume by encounter order. Holds while box traversal
++   order == document order; breaks if CSS reorders floats — revisit then.
++
++8. **Vendor reuse via polyfill, not fork.** dom-to-pptx's pptx-normalizer needs browser
++   DOMParser/XMLSerializer. `globalThis.DOMParser ??= xmldom.DOMParser` runs the vendor
++   file byte-identical. Verified: 14 Content_Types Overrides, 0 dangling.
++
++9. **WeasyPrint hands you the grid for free.** TableCellBox carries grid_x / colspan /
++   rowspan directly — no DOM attribute parsing needed (unlike dom-to-pptx which reads
++   getAttribute). colWidths: take widths from colspan==1 cells at their grid_x, then
++   split merged widths across never-single columns (extractTableData idea, ported).
++
++10. **Covered cells simply don't exist.** Both browser DOM and WeasyPrint omit cells
++    covered by a span — so IR rows[][] naturally satisfies invariant I8 and PptxGenJS's
++    expectation. No skip-logic needed. OOXML check: gridSpan=1, rowSpan/vMerge=2.
++
++11. **Opacity is a product, clipping is an intersection.** dom-to-pptx accumulates
++    `currentOpacity *= elOpacity` down the tree and skips op==0 subtrees; ported as
++    walk(op) param. overflow:hidden becomes a clip-rect stack;per-emit intersects bbox
++    (420px strip → 160px). Border-radius clipping NOT modeled — known gap.
++
++12. **Parallel validation subflows are free wins.** Semantic (A+B, python) and visual
++    (C, weasyprint+soffice renders) have no shared state — `&`/`wait` in run.sh halves
++    wall time on multi-page decks.
++
++# Session 3 — L3 charts + Layer D
++
++13. **PptxGenJS defaults graphicFrame cy to 1 inch when h is omitted.** Tables rendered
++    correctly (renderers auto-grow from rows) while the DECLARED geometry was 96px —
++    invisible to pixel diff and visual QA, caught only by Layer D's IR-vs-OOXML IoU
++    (0.296 → fix → 0.996). Geometry-level instance of critique #9/#10's
++    "looks right, is wrong". Always pass h.
++
++14. **Chart recovery is a tier ladder, not a model.** tier1 reads data-* JSON attrs
++    (repo policy: source adapters first); tier2 reverse-engineers marks: numeric tick
++    labels left of bars → linear y→value scale, rect tops → values, texts below bars →
++    categories by nearest-x. Both emit identical IR; dataSource records provenance (I9).
++    Unparseable SVG → fallbackRegion with reason (I6), never silent.
++
++15. **Charts must be masked out of pixel diff.** Native PPT charts re-render with their
++    own engine (axes, gridlines) — pixel comparison vs source SVG is meaningless there.
++    Mask chart bboxes (294,400px on slide 3), validate them semantically via IR + Layer D
++    instead. diffPct denominator excludes masked pixels.
++
++# Session 4 — integration into goodand/html-to-editable-pptx
++
++16. **Subtree beats vendor dir when the repo already decided.** `third_party/subtrees.toml`
++    records `dom_to_pptx: adopt_subtree, whole_repo`. The h2p `vendor/dom-to-pptx/`
++    single-file copy was replaced by the real `git subtree add` at
++    `third_party/subtrees/dom-to-pptx`; the h2p-verified `pptx-normalizer.js` proved
++    byte-identical to upstream master, so the mapper import path moved with zero
++    behavioral risk.
++
++17. **A pasted image is not an uploaded file.** `fixtures/logo.png` arrived as an inline
++    chat image only; the byte-exact original (md5 `efe5d80b…`) is unrecoverable. The
++    fixture asset was regenerated deterministically (stdlib PNG writer). Layer B stays
++    green because it hashes source↔output of the same file; historical IR md5 values
++    differ — expected, not a regression.
+-- 
+2.43.0
+

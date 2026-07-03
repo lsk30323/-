@@ -1,0 +1,1259 @@
+From b4d8abf031e0ae33a43ad812c7dc768b973199dd Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 3 Jul 2026 12:22:48 +0000
+Subject: [PATCH 1/4] feat: port h2p working pipeline (IR v1.2.0, extractor,
+ mapper, 4-layer validation)
+
+Byte-faithful port of the verified h2p implementation with two path
+adaptations: src/map/ -> src/mapper/ (repo convention) and the OOXML
+normalizer import now targets the dom-to-pptx subtree at
+third_party/subtrees/dom-to-pptx (per third_party/subtrees.toml,
+decision adopt_subtree; the h2p-verified vendor file is byte-identical
+to upstream master).
+
+- src/ir: IR contract v1.2.0 (invariants I1-I9) + runtime validator
+- src/extract: WeasyPrint box tree -> IR (tables, opacity, clipping,
+  images, 2-tier SVG chart recovery)
+- src/mapper: IR -> editable PPTX via PptxGenJS + subtree normalizer
+- src/validate: Layer A/B (text+media), Layer C (masked pixel diff),
+  Layer D (IR-vs-OOXML IoU)
+- run.sh orchestrator (parallel validation subflows), setup_mac.sh,
+  package.json/-lock (pptxgenjs, pixelmatch, pngjs, jszip, xmldom)
+- .gitignore: node_modules/, out/, third_party/repos/
+
+Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01Gcgys3b7VQXjNZ4dEzos8n
+---
+ .gitignore                   |   4 +
+ package-lock.json            | 206 +++++++++++++++++++++++
+ package.json                 |  20 +++
+ run.sh                       |  53 ++++++
+ setup_mac.sh                 |  23 +++
+ src/extract/README.md        |  16 ++
+ src/extract/weasy_extract.py | 313 +++++++++++++++++++++++++++++++++++
+ src/ir/schema.ts             |  81 +++++++++
+ src/ir/validate.js           |  46 +++++
+ src/mapper/README.md         |  13 ++
+ src/mapper/ir_to_pptx.mjs    | 107 ++++++++++++
+ src/validate/README.md       |  13 ++
+ src/validate/layout_d.py     |  89 ++++++++++
+ src/validate/pixel_c.mjs     |  32 ++++
+ src/validate/validate_ab.py  |  92 ++++++++++
+ 15 files changed, 1108 insertions(+)
+ create mode 100644 package-lock.json
+ create mode 100644 package.json
+ create mode 100755 run.sh
+ create mode 100755 setup_mac.sh
+ create mode 100644 src/extract/README.md
+ create mode 100644 src/extract/weasy_extract.py
+ create mode 100644 src/ir/schema.ts
+ create mode 100644 src/ir/validate.js
+ create mode 100644 src/mapper/README.md
+ create mode 100644 src/mapper/ir_to_pptx.mjs
+ create mode 100644 src/validate/README.md
+ create mode 100644 src/validate/layout_d.py
+ create mode 100644 src/validate/pixel_c.mjs
+ create mode 100644 src/validate/validate_ab.py
+
+diff --git a/.gitignore b/.gitignore
+index fd73557..84271a8 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,2 +1,6 @@
+ docs/diagrams/architecture/.mmd_check_log.jsonl
+ tests/skills/__pycache__/
++
++node_modules/
++out/
++third_party/repos/
+diff --git a/package-lock.json b/package-lock.json
+new file mode 100644
+index 0000000..9bd222b
+--- /dev/null
++++ b/package-lock.json
+@@ -0,0 +1,206 @@
++{
++  "name": "h2p",
++  "version": "1.0.0",
++  "lockfileVersion": 3,
++  "requires": true,
++  "packages": {
++    "": {
++      "name": "h2p",
++      "version": "1.0.0",
++      "license": "ISC",
++      "dependencies": {
++        "@xmldom/xmldom": "^0.9.10",
++        "jszip": "^3.10.1",
++        "pixelmatch": "^7.2.0",
++        "pngjs": "^7.0.0",
++        "pptxgenjs": "^4.0.1"
++      }
++    },
++    "node_modules/@types/node": {
++      "version": "22.19.21",
++      "resolved": "https://registry.npmjs.org/@types/node/-/node-22.19.21.tgz",
++      "integrity": "sha512-VMeFBSCKQKmm2swI2kW51SFusDqekC6q9trBCvJ/JliDchFSuoYYKN7yVNjPthP1HKZcx3U1gI/wTcEBjEFKTA==",
++      "license": "MIT",
++      "dependencies": {
++        "undici-types": "~6.21.0"
++      }
++    },
++    "node_modules/@xmldom/xmldom": {
++      "version": "0.9.10",
++      "resolved": "https://registry.npmjs.org/@xmldom/xmldom/-/xmldom-0.9.10.tgz",
++      "integrity": "sha512-A9gOqLdi6cV4ibazAjcQufGj0B1y/vDqYrcuP6d/6x8P27gRS8643Dj9o1dEKtB6O7fwxb2FgBmJS2mX7gpvdw==",
++      "license": "MIT",
++      "engines": {
++        "node": ">=14.6"
++      }
++    },
++    "node_modules/core-util-is": {
++      "version": "1.0.3",
++      "resolved": "https://registry.npmjs.org/core-util-is/-/core-util-is-1.0.3.tgz",
++      "integrity": "sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==",
++      "license": "MIT"
++    },
++    "node_modules/https": {
++      "version": "1.0.0",
++      "resolved": "https://registry.npmjs.org/https/-/https-1.0.0.tgz",
++      "integrity": "sha512-4EC57ddXrkaF0x83Oj8sM6SLQHAWXw90Skqu2M4AEWENZ3F02dFJE/GARA8igO79tcgYqGrD7ae4f5L3um2lgg==",
++      "license": "ISC"
++    },
++    "node_modules/image-size": {
++      "version": "1.2.1",
++      "resolved": "https://registry.npmjs.org/image-size/-/image-size-1.2.1.tgz",
++      "integrity": "sha512-rH+46sQJ2dlwfjfhCyNx5thzrv+dtmBIhPHk0zgRUukHzZ/kRueTJXoYYsclBaKcSMBWuGbOFXtioLpzTb5euw==",
++      "license": "MIT",
++      "dependencies": {
++        "queue": "6.0.2"
++      },
++      "bin": {
++        "image-size": "bin/image-size.js"
++      },
++      "engines": {
++        "node": ">=16.x"
++      }
++    },
++    "node_modules/immediate": {
++      "version": "3.0.6",
++      "resolved": "https://registry.npmjs.org/immediate/-/immediate-3.0.6.tgz",
++      "integrity": "sha512-XXOFtyqDjNDAQxVfYxuF7g9Il/IbWmmlQg2MYKOH8ExIT1qg6xc4zyS3HaEEATgs1btfzxq15ciUiY7gjSXRGQ==",
++      "license": "MIT"
++    },
++    "node_modules/inherits": {
++      "version": "2.0.4",
++      "resolved": "https://registry.npmjs.org/inherits/-/inherits-2.0.4.tgz",
++      "integrity": "sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==",
++      "license": "ISC"
++    },
++    "node_modules/isarray": {
++      "version": "1.0.0",
++      "resolved": "https://registry.npmjs.org/isarray/-/isarray-1.0.0.tgz",
++      "integrity": "sha512-VLghIWNM6ELQzo7zwmcg0NmTVyWKYjvIeM83yjp0wRDTmUnrM678fQbcKBo6n2CJEF0szoG//ytg+TKla89ALQ==",
++      "license": "MIT"
++    },
++    "node_modules/jszip": {
++      "version": "3.10.1",
++      "resolved": "https://registry.npmjs.org/jszip/-/jszip-3.10.1.tgz",
++      "integrity": "sha512-xXDvecyTpGLrqFrvkrUSoxxfJI5AH7U8zxxtVclpsUtMCq4JQ290LY8AW5c7Ggnr/Y/oK+bQMbqK2qmtk3pN4g==",
++      "license": "(MIT OR GPL-3.0-or-later)",
++      "dependencies": {
++        "lie": "~3.3.0",
++        "pako": "~1.0.2",
++        "readable-stream": "~2.3.6",
++        "setimmediate": "^1.0.5"
++      }
++    },
++    "node_modules/lie": {
++      "version": "3.3.0",
++      "resolved": "https://registry.npmjs.org/lie/-/lie-3.3.0.tgz",
++      "integrity": "sha512-UaiMJzeWRlEujzAuw5LokY1L5ecNQYZKfmyZ9L7wDHb/p5etKaxXhohBcrw0EYby+G/NA52vRSN4N39dxHAIwQ==",
++      "license": "MIT",
++      "dependencies": {
++        "immediate": "~3.0.5"
++      }
++    },
++    "node_modules/pako": {
++      "version": "1.0.11",
++      "resolved": "https://registry.npmjs.org/pako/-/pako-1.0.11.tgz",
++      "integrity": "sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==",
++      "license": "(MIT AND Zlib)"
++    },
++    "node_modules/pixelmatch": {
++      "version": "7.2.0",
++      "resolved": "https://registry.npmjs.org/pixelmatch/-/pixelmatch-7.2.0.tgz",
++      "integrity": "sha512-xhcb4yHu9sM/G7foGzoLtXYcC0zHEaOXXjRKhGup0fw78Nf2Tkiapv4EQyMzrbcmQPsllAI7DbFY2UT7PlI9Pg==",
++      "license": "ISC",
++      "dependencies": {
++        "pngjs": "^7.0.0"
++      },
++      "bin": {
++        "pixelmatch": "bin/pixelmatch"
++      }
++    },
++    "node_modules/pngjs": {
++      "version": "7.0.0",
++      "resolved": "https://registry.npmjs.org/pngjs/-/pngjs-7.0.0.tgz",
++      "integrity": "sha512-LKWqWJRhstyYo9pGvgor/ivk2w94eSjE3RGVuzLGlr3NmD8bf7RcYGze1mNdEHRP6TRP6rMuDHk5t44hnTRyow==",
++      "license": "MIT",
++      "engines": {
++        "node": ">=14.19.0"
++      }
++    },
++    "node_modules/pptxgenjs": {
++      "version": "4.0.1",
++      "resolved": "https://registry.npmjs.org/pptxgenjs/-/pptxgenjs-4.0.1.tgz",
++      "integrity": "sha512-TeJISr8wouAuXw4C1F/mC33xbZs/FuEG6nH9FG1Zj+nuPcGMP5YRHl6X+j3HSUnS1f3at6k75ZZXPMZlA5Lj9A==",
++      "license": "MIT",
++      "dependencies": {
++        "@types/node": "^22.8.1",
++        "https": "^1.0.0",
++        "image-size": "^1.2.1",
++        "jszip": "^3.10.1"
++      }
++    },
++    "node_modules/process-nextick-args": {
++      "version": "2.0.1",
++      "resolved": "https://registry.npmjs.org/process-nextick-args/-/process-nextick-args-2.0.1.tgz",
++      "integrity": "sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==",
++      "license": "MIT"
++    },
++    "node_modules/queue": {
++      "version": "6.0.2",
++      "resolved": "https://registry.npmjs.org/queue/-/queue-6.0.2.tgz",
++      "integrity": "sha512-iHZWu+q3IdFZFX36ro/lKBkSvfkztY5Y7HMiPlOUjhupPcG2JMfst2KKEpu5XndviX/3UhFbRngUPNKtgvtZiA==",
++      "license": "MIT",
++      "dependencies": {
++        "inherits": "~2.0.3"
++      }
++    },
++    "node_modules/readable-stream": {
++      "version": "2.3.8",
++      "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-2.3.8.tgz",
++      "integrity": "sha512-8p0AUk4XODgIewSi0l8Epjs+EVnWiK7NoDIEGU0HhE7+ZyY8D1IMY7odu5lRrFXGg71L15KG8QrPmum45RTtdA==",
++      "license": "MIT",
++      "dependencies": {
++        "core-util-is": "~1.0.0",
++        "inherits": "~2.0.3",
++        "isarray": "~1.0.0",
++        "process-nextick-args": "~2.0.0",
++        "safe-buffer": "~5.1.1",
++        "string_decoder": "~1.1.1",
++        "util-deprecate": "~1.0.1"
++      }
++    },
++    "node_modules/safe-buffer": {
++      "version": "5.1.2",
++      "resolved": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.2.tgz",
++      "integrity": "sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==",
++      "license": "MIT"
++    },
++    "node_modules/setimmediate": {
++      "version": "1.0.5",
++      "resolved": "https://registry.npmjs.org/setimmediate/-/setimmediate-1.0.5.tgz",
++      "integrity": "sha512-MATJdZp8sLqDl/68LfQmbP8zKPLQNV6BIZoIgrscFDQ+RsvK/BxeDQOgyxKKoh0y/8h3BqVFnCqQ/gd+reiIXA==",
++      "license": "MIT"
++    },
++    "node_modules/string_decoder": {
++      "version": "1.1.1",
++      "resolved": "https://registry.npmjs.org/string_decoder/-/string_decoder-1.1.1.tgz",
++      "integrity": "sha512-n/ShnvDi6FHbbVfviro+WojiFzv+s8MPMHBczVePfUpDJLwoLT0ht1l4YwBCbi8pJAveEEdnkHyPyTP/mzRfwg==",
++      "license": "MIT",
++      "dependencies": {
++        "safe-buffer": "~5.1.0"
++      }
++    },
++    "node_modules/undici-types": {
++      "version": "6.21.0",
++      "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-6.21.0.tgz",
++      "integrity": "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==",
++      "license": "MIT"
++    },
++    "node_modules/util-deprecate": {
++      "version": "1.0.2",
++      "resolved": "https://registry.npmjs.org/util-deprecate/-/util-deprecate-1.0.2.tgz",
++      "integrity": "sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==",
++      "license": "MIT"
++    }
++  }
++}
+diff --git a/package.json b/package.json
+new file mode 100644
+index 0000000..1a2314d
+--- /dev/null
++++ b/package.json
+@@ -0,0 +1,20 @@
++{
++  "name": "h2p",
++  "version": "1.0.0",
++  "description": "",
++  "main": "index.js",
++  "scripts": {
++    "test": "echo \"Error: no test specified\" && exit 1"
++  },
++  "keywords": [],
++  "author": "",
++  "license": "ISC",
++  "type": "module",
++  "dependencies": {
++    "@xmldom/xmldom": "^0.9.10",
++    "jszip": "^3.10.1",
++    "pixelmatch": "^7.2.0",
++    "pngjs": "^7.0.0",
++    "pptxgenjs": "^4.0.1"
++  }
++}
+diff --git a/run.sh b/run.sh
+new file mode 100755
+index 0000000..fefeb73
+--- /dev/null
++++ b/run.sh
+@@ -0,0 +1,53 @@
++#!/usr/bin/env bash
++# Orchestrator: extract → map → [subflow A+B ∥ subflow C-prep] → pixel per page → merge.
++# Subflows run as parallel OS processes (independent validation paths).
++set -e
++cd "$(dirname "$0")"
++H="${1:-fixtures/deck.html}"
++B="$(basename "${H%.html}")"
++
++# Portable LibreOffice pptx→pdf runner: container skill → PATH → macOS app bundle.
++# `timeout` is absent on stock macOS, so it is applied only when available.
++soffice_pdf() {
++  local T=""; command -v timeout >/dev/null && T="timeout 110"
++  if [ -f /mnt/skills/public/pptx/scripts/office/soffice.py ]; then
++    $T python3 /mnt/skills/public/pptx/scripts/office/soffice.py --headless --convert-to pdf --outdir out "$1" >/dev/null 2>&1
++  elif command -v soffice >/dev/null; then
++    $T soffice --headless --convert-to pdf --outdir out "$1" >/dev/null 2>&1
++  elif [ -x "/Applications/LibreOffice.app/Contents/MacOS/soffice" ]; then
++    $T /Applications/LibreOffice.app/Contents/MacOS/soffice --headless --convert-to pdf --outdir out "$1" >/dev/null 2>&1
++  else
++    echo "ERROR: LibreOffice not found. macOS: brew install --cask libreoffice" >&2; return 3
++  fi
++}
++
++echo "── stage 1: extract"
++python3 src/extract/weasy_extract.py "$H" "out/$B.ir.json"
++
++echo "── stage 2: map (+normalize)"
++node src/mapper/ir_to_pptx.mjs "out/$B.ir.json" "out/$B.pptx"
++
++echo "── stage 3: parallel validation subflows"
++( python3 src/validate/validate_ab.py "$H" "out/$B.pptx" > "out/$B.ab.json" 2> "out/$B.ab.err" || true ) &
++P_AB=$!
++( python3 -c "from weasyprint import HTML; HTML(filename='$H').write_pdf('out/$B.src.pdf')" \
++  && soffice_pdf "out/$B.pptx" \
++  && pdftoppm -png -scale-to-x 1280 -scale-to-y 720 "out/$B.src.pdf" "out/${B}_A" \
++  && pdftoppm -png -scale-to-x 1280 -scale-to-y 720 "out/$B.pdf" "out/${B}_B" ) &
++P_C=$!
++wait $P_AB; wait $P_C
++echo "  subflow A+B done; subflow C renders done"
++
++echo "── stage 4: pixel diff per slide (chart regions masked)"
++for a in out/${B}_A-*.png; do
++  n="${a##*-}"; n="${n%.png}"
++  node src/validate/pixel_c.mjs "$a" "out/${B}_B-$n.png" "out/${B}_diff-$n.png" "out/$B.masks.json" "$n" || true
++done
++
++echo "── stage 5: layout IoU (Layer D)"
++python3 src/validate/layout_d.py "out/$B.ir.json" "out/$B.pptx" > "out/$B.d.json" || true
++cat "out/$B.d.json"
++
++echo "── report"
++cat "out/$B.ab.json"
++cat "out/$B.mapreport.json"
+diff --git a/setup_mac.sh b/setup_mac.sh
+new file mode 100755
+index 0000000..e55b62c
+--- /dev/null
++++ b/setup_mac.sh
+@@ -0,0 +1,23 @@
++#!/usr/bin/env bash
++# macOS setup for html-to-editable-pptx parser. Requires Homebrew (https://brew.sh).
++set -e
++command -v brew >/dev/null || { echo "Homebrew required: https://brew.sh"; exit 1; }
++
++echo "── system deps (poppler: pdftoppm | pango: WeasyPrint backend | LibreOffice: pptx render)"
++brew list poppler >/dev/null 2>&1 || brew install poppler
++brew list pango   >/dev/null 2>&1 || brew install pango
++brew list --cask libreoffice >/dev/null 2>&1 || brew install --cask libreoffice
++
++echo "── python deps"
++python3 -m pip install --upgrade weasyprint
++
++echo "── node deps (uses package-lock.json)"
++npm ci
++
++echo
++echo "Optional (Korean text fidelity in renders):"
++echo "  brew install --cask font-noto-sans-cjk"
++echo
++echo "Setup done. Smoke test:"
++echo "  bash run.sh fixtures/deck.html"
++echo "Expect: layerA pass / layerB pass / layerC diffPct<5 per slide / layerD pass worstIoU>0.9"
+diff --git a/src/extract/README.md b/src/extract/README.md
+new file mode 100644
+index 0000000..c6e566e
+--- /dev/null
++++ b/src/extract/README.md
+@@ -0,0 +1,16 @@
++# src/extract — HTML → Visual Object IR
++
++`weasy_extract.py` renders HTML with WeasyPrint (deterministic, rule-based CSS
++layout engine — no browser required) and walks the box tree into IR v1.2.0
++(`src/ir/schema.ts`). Handles multi-page decks, tables (grid_x/colspan/rowspan),
++opacity products, overflow:hidden clipping, images (document-order src queue),
++and two-tier SVG chart recovery (data-* attrs first, mark/axis reverse-engineering
++second; unparseable → fallbackRegion).
++
++The architecture docs describe a Playwright-based extractor; WeasyPrint is the
++v0.1 implementation choice (see docs/lessons.md #3). Read docs/lessons.md and
++docs/HANDOFF.md §5 footguns before editing.
++
++```
++python3 src/extract/weasy_extract.py fixtures/deck.html out/deck.ir.json
++```
+diff --git a/src/extract/weasy_extract.py b/src/extract/weasy_extract.py
+new file mode 100644
+index 0000000..81320f7
+--- /dev/null
++++ b/src/extract/weasy_extract.py
+@@ -0,0 +1,313 @@
++#!/usr/bin/env python3
++"""HTML -> Visual Object IR (JSON) via WeasyPrint box tree. Rule-based only.
++Ideas ported from dom-to-pptx (PX_TO_INCH, render-item typing, paint-order z).
++Usage: python3 weasy_extract.py fixtures/slide13.html out/slide13.ir.json
++"""
++import sys, json, hashlib, os, re
++from html.parser import HTMLParser
++from weasyprint import HTML
++
++IR_VERSION = "1.2.0"
++
++def parse_svg_charts(raw):
++    """Document-order chart specs from inline <svg> blocks. Rule-based two-tier:
++    tier1 'attr': data-categories/data-values JSON attributes (repo policy: source first);
++    tier2 'svg-marks': bar rects + numeric axis ticks -> linear scale (ChartDetective idea,
++    simplified to deterministic rules). Returns list of dict|{'error':reason}."""
++    import xml.etree.ElementTree as ET
++    out = []
++    for block in re.findall(r"<svg\b.*?</svg>", raw, re.S):
++        try:
++            el = ET.fromstring(re.sub(r'\sxmlns(:\w+)?="[^"]*"', "", block))
++        except ET.ParseError as e:
++            out.append({"error": f"svg parse: {e}"}); continue
++        # ── tier 1: source data attributes
++        if el.get("data-categories") and el.get("data-values"):
++            try:
++                out.append({"dataSource": "attr", "chartType": el.get("data-chart", "bar"),
++                            "categories": json.loads(el.get("data-categories")),
++                            "series": [{"name": el.get("data-name", "Series 1"),
++                                        "values": json.loads(el.get("data-values")),
++                                        "color": el.get("data-color")}]})
++                continue
++            except Exception as e:
++                out.append({"error": f"attr tier: {e}"}); continue
++        # ── tier 2: reverse-engineer marks
++        rects = [r for r in el.iter() if r.tag == "rect" and "bar" in (r.get("class") or "")]
++        if not rects:
++            rects = [r for r in el.iter() if r.tag == "rect"]
++        texts = [(float(t.get("x", 0)), float(t.get("y", 0)), "".join(t.itertext()).strip())
++                 for t in el.iter() if t.tag == "text"]
++        if len(rects) < 2:
++            out.append({"error": "svg-marks: <2 bar rects"}); continue
++        rects.sort(key=lambda r: float(r.get("x", 0)))
++        bar_xs = [float(r.get("x", 0)) for r in rects]
++        # numeric ticks left of first bar -> linear value scale from y positions
++        ticks = sorted([(y, float(txt.replace(",", ""))) for x, y, txt in texts
++                        if x < bar_xs[0] and re.fullmatch(r"-?[\d,.]+", txt)], key=lambda t: t[0])
++        def y_to_val(y):
++            if len(ticks) >= 2:
++                (y1, v1), (y2, v2) = ticks[0], ticks[-1]
++                if y2 != y1: return round(v1 + (v2 - v1) * (y - y1) / (y2 - y1), 2)
++            return None
++        values = []
++        for r in rects:
++            top = float(r.get("y", 0))
++            v = y_to_val(top)
++            values.append(v if v is not None else round(float(r.get("height", 0)), 2))
++        # category labels: texts below bars, matched to nearest bar center by x
++        below = [(x, txt) for x, y, txt in texts
++                 if y > max(float(r.get("y", 0)) + float(r.get("height", 0)) for r in rects) - 1]
++        cats = []
++        for r in rects:
++            cx = float(r.get("x", 0)) + float(r.get("width", 0)) / 2
++            cats.append(min(below, key=lambda b: abs(b[0] - cx))[1] if below else f"#{len(cats)+1}")
++        color = (rects[0].get("fill") or "").lstrip("#") or None
++        out.append({"dataSource": "svg-marks", "chartType": "bar", "categories": cats,
++                    "series": [{"name": "Series 1", "values": values, "color": color}]})
++    return out
++
++class ImgSrcGrab(HTMLParser):
++    """Collect <img src> in document order (RasterImage exposes no URL — lesson #7)."""
++    def __init__(self):
++        super().__init__(); self.srcs = []
++    def handle_starttag(self, tag, attrs):
++        if tag == "img":
++            d = dict(attrs)
++            if d.get("src"): self.srcs.append(d["src"])
++
++def intersect(b, clip):
++    """Clip bbox b against clip rect (dom-to-pptx isClippedByParent idea, geometric form)."""
++    if clip is None: return b
++    x1, y1 = max(b["x"], clip["x"]), max(b["y"], clip["y"])
++    x2 = min(b["x"] + b["w"], clip["x"] + clip["w"])
++    y2 = min(b["y"] + b["h"], clip["y"] + clip["h"])
++    if x2 <= x1 or y2 <= y1: return None
++    return {"x": round(x1, 1), "y": round(y1, 1), "w": round(x2 - x1, 1), "h": round(y2 - y1, 1)}
++
++def hexc(rgba):
++    if rgba is None: return None
++    r, g, b, a = rgba
++    if a == 0: return None
++    return "%02X%02X%02X" % (round(r*255), round(g*255), round(b*255))
++
++def style_of(box, text_box=None):
++    s = (text_box or box).style
++    st = {}
++    fs = s["font_size"]
++    if fs: st["fontSizePx"] = round(fs, 1)
++    fam = s["font_family"]
++    if fam: st["fontFamily"] = fam[0] if isinstance(fam, (list, tuple)) else str(fam)
++    fw = s["font_weight"]
++    if fw: st["fontWeight"] = int(fw)
++    c = hexc(s["color"])
++    if c: st["color"] = c
++    try:
++        ta = s["text_align_all"]
++        if ta in ("left", "center", "right"): st["align"] = ta
++    except Exception:
++        pass
++    bg = hexc(s["background_color"])
++    if bg: st["fillColor"] = bg
++    bw = s["border_top_width"]
++    if bw and bw > 0:
++        st["borderWidthPx"] = round(bw, 1)
++        bc = hexc(s["border_top_color"])
++        if bc: st["borderColor"] = bc
++    try:
++        br = s["border_top_left_radius"]
++        rv = br[0][0] if isinstance(br, (list, tuple)) and isinstance(br[0], (list, tuple)) else \
++             (br[0] if isinstance(br, (list, tuple)) else br)
++        if rv and float(rv) > 0: st["borderRadiusPx"] = round(float(rv), 1)
++    except Exception:
++        pass
++    return st
++
++def bbox_of(box):
++    return {"x": round(box.border_box_x(), 1), "y": round(box.border_box_y(), 1),
++            "w": round(box.border_width(), 1), "h": round(box.border_height(), 1)}
++
++def texts_under(box):
++    out = []
++    if type(box).__name__ == "TextBox":
++        out.append(box)
++    for c in getattr(box, "children", []):
++        out.extend(texts_under(c))
++    return out
++
++def extract(html_path, out_path):
++    base = os.path.dirname(os.path.abspath(html_path))
++    raw = open(html_path, encoding="utf-8").read()
++    grab = ImgSrcGrab(); grab.feed(raw)
++    img_srcs = list(grab.srcs)            # consumed in encounter order
++    charts = parse_svg_charts(raw)        # consumed in encounter order (L3)
++    doc = HTML(filename=html_path).render()
++    page_w, page_h = doc.pages[0].width, doc.pages[0].height
++    slides = []
++
++    def do_page(page):
++        nodes, z = [], [0]
++        background = [None]
++
++        def emit(node, op, clip):
++            bb = intersect(node["bbox"], clip)
++            if bb is None:
++                print(f"  clip-drop {node['sourceRef']}"); return
++            node["bbox"] = bb
++            if op < 1: node["style"]["opacity"] = round(op, 3)
++            node["irVersion"] = IR_VERSION
++            node["zIndex"] = z[0]; z[0] += 1
++            nodes.append(node)
++
++        def cell_text(cell):
++            return " ".join(t.text for t in texts_under(cell)).strip()
++
++        def rows_under(b):
++            out = []
++            if type(b).__name__ == "TableRowBox": out.append(b)
++            for c in getattr(b, "children", []): out.extend(rows_under(c))
++            return out
++
++        def cells_of(row):
++            return [c for c in row.children if type(c).__name__ == "TableCellBox"]
++
++        def handle_table(box, ref, op, clip):
++            rrows = rows_under(box)
++            # 1. column count from grid_x + colspan (WeasyPrint cell attrs)
++            ncols = 0
++            for row in rrows:
++                for c in cells_of(row):
++                    ncols = max(ncols, (getattr(c, "grid_x", 0) or 0) + (getattr(c, "colspan", 1) or 1))
++            # 2. widths from colspan==1 cells at their grid_x
++            colw = [0.0] * ncols
++            for row in rrows:
++                for c in cells_of(row):
++                    if (getattr(c, "colspan", 1) or 1) == 1:
++                        gx = getattr(c, "grid_x", 0) or 0
++                        colw[gx] = max(colw[gx], round(c.border_width(), 1))
++            # 3. never-single columns: split merged width (dom-to-pptx extractTableData idea)
++            for row in rrows:
++                for c in cells_of(row):
++                    csp = getattr(c, "colspan", 1) or 1
++                    if csp > 1:
++                        gx = getattr(c, "grid_x", 0) or 0
++                        missing = [i for i in range(gx, gx + csp) if colw[i] == 0]
++                        if missing:
++                            known = sum(colw[i] for i in range(gx, gx + csp))
++                            share = max((round(c.border_width(), 1) - known) / len(missing), 1.0)
++                            for i in missing: colw[i] = round(share, 1)
++            rows, row_h = [], []
++            for row in rrows:
++                row_h.append(round(row.border_height(), 1))
++                r = []
++                for c in cells_of(row):
++                    tb = texts_under(c)
++                    cs = style_of(c, tb[0] if tb else None)
++                    if c.element_tag == "th": cs["fontWeight"] = max(cs.get("fontWeight", 400), 700)
++                    cell = {"text": cell_text(c), "style": cs}
++                    csp = getattr(c, "colspan", 1) or 1
++                    rsp = getattr(c, "rowspan", 1) or 1
++                    if csp > 1: cell["colspan"] = csp      # I8
++                    if rsp > 1: cell["rowspan"] = rsp      # I8
++                    r.append(cell)
++                rows.append(r)
++            emit({"sourceRef": ref, "semanticType": "table", "bbox": bbox_of(box),
++                  "style": style_of(box), "rows": rows,
++                  "colWidthsPx": [round(w, 1) for w in colw], "rowHeightsPx": row_h}, op, clip)
++
++        def handle_image(box, ref, op, clip):
++            rel = img_srcs.pop(0) if img_srcs else "logo.png"
++            src = os.path.join(base, rel)
++            md5 = hashlib.md5(open(src, "rb").read()).hexdigest()
++            emit({"sourceRef": ref, "semanticType": "image", "bbox": bbox_of(box),
++                  "style": style_of(box), "src": src, "md5": md5}, op, clip)
++
++        def is_text_para(box):
++            return box.element_tag in ("p", "h1", "h2", "h3", "span", "li") and texts_under(box)
++
++        def handle_text(box, ref, op, clip):
++            tbs = texts_under(box)
++            txt = " ".join(t.text for t in tbs).strip()
++            if not txt: return
++            first = tbs[0]
++            emit({"sourceRef": ref, "semanticType": "text",
++                  "bbox": {"x": round(first.position_x, 1), "y": round(first.position_y, 1),
++                           "w": round(box.border_width(), 1), "h": round(box.border_height(), 1)},
++                  "style": style_of(box, first), "text": txt}, op, clip)
++
++        def has_visual(box):
++            s = box.style
++            return hexc(s["background_color"]) or (s["border_top_width"] or 0) > 0
++
++        def get(s, key, default=None):
++            try: return s[key]
++            except Exception: return default
++
++        def walk(box, path, op, clip):
++            box = getattr(box, "_box", box)            # unwrap AbsolutePlaceholder (lesson #1)
++            cls = type(box).__name__
++            tag = getattr(box, "element_tag", None) or cls
++            ref = f"{path}>{tag}"
++            s = getattr(box, "style", None)
++            if s is not None:
++                # opacity product — dom-to-pptx index.js: currentOpacity *= elOpacity
++                o = get(s, "opacity")
++                if o is not None:
++                    op = op * float(o)
++                    if op == 0: return                 # dom-to-pptx: skip fully hidden
++                # full-page background absorber (body OR section covering the page)
++                bg = hexc(get(s, "background_color"))
++                if bg and background[0] is None and hasattr(box, "border_width"):
++                    if box.border_width() >= 0.95 * page_w and box.border_height() >= 0.95 * page_h:
++                        background[0] = bg
++                        for c in getattr(box, "children", []): walk(c, ref, op, clip)
++                        return
++            if cls == "TableBox":
++                handle_table(box, ref, op, clip); return
++            if tag.endswith("svg"):                      # namespaced: {http://...}svg
++                spec = charts.pop(0) if charts else {"error": "no parsed svg left"}
++                if "error" in spec:
++                    emit({"sourceRef": ref, "semanticType": "fallbackRegion",
++                          "bbox": bbox_of(box), "style": style_of(box),
++                          "reason": f"chart unrecoverable: {spec['error']}"}, op, clip)   # I6
++                else:
++                    emit({"sourceRef": ref, "semanticType": "chart", "bbox": bbox_of(box),
++                          "style": style_of(box), **spec}, op, clip)
++                return
++            if tag == "img":
++                handle_image(box, ref, op, clip); return
++            if is_text_para(box):
++                handle_text(box, ref, op, clip); return
++            if cls.startswith("Block") and tag not in ("html", "body", "section") \
++               and has_visual(box) and not texts_under(box):
++                st = style_of(box)
++                emit({"sourceRef": ref, "semanticType": "shape", "bbox": bbox_of(box),
++                      "style": st, "shape": "roundRect" if st.get("borderRadiusPx") else "rect"}, op, clip)
++                # fallthrough intentional: clipped children of a visual box still walk below
++            # clip stack — overflow:hidden intersects descendants (dom-to-pptx isClippedByParent)
++            if s is not None and get(s, "overflow") == "hidden":
++                clip = intersect(bbox_of(box), clip) or {"x": 0, "y": 0, "w": 0, "h": 0}
++            for c in getattr(box, "children", []):
++                walk(c, ref, op, clip)
++
++        walk(page._page_box, "page", 1.0, None)
++        return {"background": background[0], "nodes": nodes}
++
++    for pi, page in enumerate(doc.pages):
++        sl = do_page(page)
++        if sl["nodes"] or sl["background"]:
++            slides.append(sl)
++
++    ir = {"irVersion": IR_VERSION, "pagePx": {"w": page_w, "h": page_h}, "slides": slides}
++    json.dump(ir, open(out_path, "w"), ensure_ascii=False, indent=1)
++    # masks: chart regions are validated semantically, not pixel-wise (renderer-diff expected)
++    masks = [[n["bbox"] for n in sl["nodes"] if n["semanticType"] == "chart"] for sl in slides]
++    json.dump(masks, open(out_path.replace(".ir.json", ".masks.json"), "w"))
++    for si, sl in enumerate(slides):
++        types = {}
++        for n in sl["nodes"]: types[n["semanticType"]] = types.get(n["semanticType"], 0) + 1
++        print(f"slide {si+1}: bg={sl['background']} nodes={len(sl['nodes'])} {types}")
++    print(f"IR written: {out_path} | page {page_w}x{page_h} | slides={len(slides)}")
++
++if __name__ == "__main__":
++    extract(sys.argv[1], sys.argv[2])
+diff --git a/src/ir/schema.ts b/src/ir/schema.ts
+new file mode 100644
+index 0000000..15305bb
+--- /dev/null
++++ b/src/ir/schema.ts
+@@ -0,0 +1,81 @@
++/**
++ * Visual Object IR — canonical contract between extraction and generation.
++ * Version: 1.0.0
++ * Invariants:
++ *  I1. Every node carries sourceRef (provenance: critique #2).
++ *  I2. bbox is in CSS px, page-absolute, 96dpi. Consumers convert (1/96 → inch).
++ *  I3. zIndex is paint order: extractor traversal order. Mapper MUST sort by it.
++ *  I4. semanticType is closed: text|shape|table|image|group|fallbackRegion.
++ *  I5. A table node owns its cells; cells never appear as top-level nodes.
++ *  I6. fallbackRegion is a logged editability failure, never a silent default.
++ *  I7. (1.1.0) Document is paged: slides[] in page order; zIndex restarts per slide.
++ *  I8. (1.1.0) Covered cells of a rowspan/colspan are OMITTED from rows[][] —
++ *      the spanning cell carries colspan/rowspan (mirrors dom-to-pptx extractTableData).
++ *  I9. (1.2.0) chart carries dataSource provenance: "attr" (source-data tier) or
++ *      "svg-marks" (mark/axis reverse-engineering tier). Repo policy: source first,
++ *      marks second, ML never. Unparseable SVG → fallbackRegion with reason.
++ */
++
++export const IR_VERSION = "1.2.0";
++
++export interface BBox { x: number; y: number; w: number; h: number; }   // CSS px
++
++export interface IRStyle {
++  fontFamily?: string;
++  fontSizePx?: number;          // CSS px; mapper: pt = px * 72/96
++  fontWeight?: number;          // 400 | 700 ...
++  italic?: boolean;
++  color?: string;               // "RRGGBB"
++  align?: "left" | "center" | "right";
++  fillColor?: string;           // "RRGGBB" | undefined = transparent
++  borderColor?: string;
++  borderWidthPx?: number;
++  borderRadiusPx?: number;
++  opacity?: number;             // 0..1
++}
++
++export interface IRNodeBase {
++  irVersion: typeof IR_VERSION;
++  sourceRef: string;            // e.g. "html>body>div#card>p:nth(2)"
++  bbox: BBox;
++  zIndex: number;
++  semanticType: "text" | "shape" | "table" | "image" | "group" | "fallbackRegion";
++  style: IRStyle;
++}
++
++export interface IRText  extends IRNodeBase { semanticType: "text";  text: string; }
++export interface IRShape extends IRNodeBase { semanticType: "shape"; shape: "rect" | "roundRect"; }
++export interface IRImage extends IRNodeBase { semanticType: "image"; src: string; md5: string; }
++
++export interface IRTableCell { text: string; style: IRStyle; colspan?: number; rowspan?: number; }
++export interface IRTable extends IRNodeBase {
++  semanticType: "table";
++  rows: IRTableCell[][];        // I5, I8
++  colWidthsPx: number[];
++  rowHeightsPx?: number[];
++}
++
++export interface IRChartSeries { name: string; values: number[]; color?: string; }
++export interface IRChart extends IRNodeBase {
++  semanticType: "chart";
++  chartType: "bar";                   // closed; extend deliberately
++  categories: string[];
++  series: IRChartSeries[];
++  dataSource: "attr" | "svg-marks";   // I9
++}
++
++export interface IRGroup extends IRNodeBase { semanticType: "group"; children: IRNode[]; }
++export interface IRFallback extends IRNodeBase { semanticType: "fallbackRegion"; reason: string; }
++
++export type IRNode = IRText | IRShape | IRImage | IRTable | IRChart | IRGroup | IRFallback;
++
++export interface IRSlide {
++  background?: string;                // "RRGGBB"
++  nodes: IRNode[];                    // flat, paint-ordered by zIndex (I7)
++}
++
++export interface IRDocument {
++  irVersion: typeof IR_VERSION;
++  pagePx: { w: number; h: number };   // e.g. 1280x720
++  slides: IRSlide[];                  // page order (I7)
++}
+diff --git a/src/ir/validate.js b/src/ir/validate.js
+new file mode 100644
+index 0000000..efe3bd9
+--- /dev/null
++++ b/src/ir/validate.js
+@@ -0,0 +1,46 @@
++// Runtime validator for IR JSON (enforces schema.ts invariants I1–I8).
++export const IR_VERSION = "1.2.0";
++const TYPES = new Set(["text", "shape", "table", "image", "chart", "group", "fallbackRegion"]);
++
++export function validateIR(doc) {
++  const errs = [];
++  const req = (cond, msg) => { if (!cond) errs.push(msg); };
++
++  req(doc.irVersion === IR_VERSION, `irVersion must be ${IR_VERSION}`);
++  req(doc.pagePx && doc.pagePx.w > 0 && doc.pagePx.h > 0, "pagePx required");
++  req(Array.isArray(doc.slides) && doc.slides.length > 0, "slides[] required (I7)");
++
++  const walk = (n, path) => {
++    req(typeof n.sourceRef === "string" && n.sourceRef.length > 0, `${path}: sourceRef (I1)`);
++    req(n.bbox && [n.bbox.x, n.bbox.y, n.bbox.w, n.bbox.h].every(Number.isFinite), `${path}: bbox (I2)`);
++    req(Number.isInteger(n.zIndex), `${path}: zIndex (I3)`);
++    req(TYPES.has(n.semanticType), `${path}: semanticType (I4)`);
++    if (n.semanticType === "text")  req(typeof n.text === "string", `${path}: text.text`);
++    if (n.semanticType === "image") req(n.src && n.md5, `${path}: image src+md5`);
++    if (n.semanticType === "table") {
++      req(Array.isArray(n.rows) && n.rows.length > 0, `${path}: table.rows (I5)`);
++      req(Array.isArray(n.colWidthsPx) && n.colWidthsPx.every((w) => w > 0), `${path}: colWidthsPx>0`);
++      n.rows.flat().forEach((c, ci) => {
++        if (c.colspan != null) req(c.colspan >= 2, `${path}.cell[${ci}]: colspan>=2 (I8)`);
++        if (c.rowspan != null) req(c.rowspan >= 2, `${path}.cell[${ci}]: rowspan>=2 (I8)`);
++      });
++    }
++    if (n.semanticType === "chart") {
++      req(n.chartType === "bar", `${path}: chartType closed set (I9)`);
++      req(Array.isArray(n.categories) && n.categories.length > 0, `${path}: chart.categories`);
++      req(Array.isArray(n.series) && n.series.every((s) => Array.isArray(s.values) && s.values.length === n.categories.length),
++          `${path}: series values must align with categories`);
++      req(["attr", "svg-marks"].includes(n.dataSource), `${path}: dataSource provenance (I9)`);
++    }
++    if (n.semanticType === "fallbackRegion") req(typeof n.reason === "string", `${path}: fallback.reason (I6)`);
++    if (n.semanticType === "group") (n.children || []).forEach((c, i) => walk(c, `${path}.children[${i}]`));
++  };
++
++  (doc.slides || []).forEach((sl, si) => {
++    req(Array.isArray(sl.nodes), `slides[${si}].nodes[] required`);
++    (sl.nodes || []).forEach((n, i) => walk(n, `slides[${si}].nodes[${i}]`));
++    const sorted = (sl.nodes || []).every((n, i, a) => i === 0 || a[i - 1].zIndex <= n.zIndex);
++    req(sorted, `slides[${si}]: nodes must be paint-ordered by zIndex (I3/I7)`);
++  });
++  return errs;
++}
+diff --git a/src/mapper/README.md b/src/mapper/README.md
+new file mode 100644
+index 0000000..da7a464
+--- /dev/null
++++ b/src/mapper/README.md
+@@ -0,0 +1,13 @@
++# src/mapper — IR → editable .pptx
++
++`ir_to_pptx.mjs` validates IR (`src/ir/validate.js`, refuses invalid input) and
++maps every node to a native PptxGenJS object: text, shape (rect/roundRect),
++image, table (colspan/rowspan pass-through, explicit h — footgun #5), bar chart.
++fallbackRegion is logged, never silent. After writeFile it runs the dom-to-pptx
++OOXML normalizer (imported verbatim from `third_party/subtrees/dom-to-pptx`,
++browser globals polyfilled via @xmldom/xmldom) and emits `*.mapreport.json`
++with the editability score.
++
++```
++node src/mapper/ir_to_pptx.mjs out/deck.ir.json out/deck.pptx
++```
+diff --git a/src/mapper/ir_to_pptx.mjs b/src/mapper/ir_to_pptx.mjs
+new file mode 100644
+index 0000000..a64a0e9
+--- /dev/null
++++ b/src/mapper/ir_to_pptx.mjs
+@@ -0,0 +1,107 @@
++// IR JSON -> editable .pptx via PptxGenJS.
++// Ported from dom-to-pptx: PX_TO_INCH=1/96, render-item type dispatch, paint-order z.
++// Usage: node src/mapper/ir_to_pptx.mjs out/slide13.ir.json out/slide13.pptx
++import fs from "node:fs";
++import PptxGenJS from "pptxgenjs";
++import JSZip from "jszip";
++import { DOMParser, XMLSerializer } from "@xmldom/xmldom";
++// vendor normalizer expects browser globals; polyfill without modifying vendor code
++globalThis.DOMParser ??= DOMParser;
++globalThis.XMLSerializer ??= XMLSerializer;
++import { validateIR } from "../ir/validate.js";
++// L6: direct code reuse — dom-to-pptx's defensive OOXML normalizer
++// (subtree per third_party/subtrees.toml: adopt_subtree, whole_repo)
++import { normalizePptxZip } from "../../third_party/subtrees/dom-to-pptx/src/pptx-normalizer.js";
++
++const PX_TO_INCH = 1 / 96;          // dom-to-pptx src/index.js:36
++const PX_TO_PT = 72 / 96;           // CSS px -> typographic pt
++const inch = (px) => +(px * PX_TO_INCH).toFixed(3);
++const pt = (px) => +(px * PX_TO_PT).toFixed(1);
++
++const [, , irPath, outPath] = process.argv;
++const ir = JSON.parse(fs.readFileSync(irPath, "utf8"));
++
++const errs = validateIR(ir);
++if (errs.length) { console.error("IR INVALID:\n" + errs.join("\n")); process.exit(1); }
++
++const pptx = new PptxGenJS();
++pptx.defineLayout({ name: "PX", width: inch(ir.pagePx.w), height: inch(ir.pagePx.h) });
++pptx.layout = "PX";
++
++const stats = { native: 0, fallback: 0, byType: {} };
++const count = (t, ok) => { stats.byType[t] = (stats.byType[t] || 0) + 1; ok ? stats.native++ : stats.fallback++; };
++
++const geo = (n) => ({ x: inch(n.bbox.x), y: inch(n.bbox.y), w: inch(n.bbox.w), h: inch(n.bbox.h) });
++const transp = (s) => (s.opacity != null ? Math.round((1 - s.opacity) * 100) : undefined);
++
++for (const sl of ir.slides) {
++const slide = pptx.addSlide();
++if (sl.background) slide.background = { color: sl.background };
++
++for (const n of [...sl.nodes].sort((a, b) => a.zIndex - b.zIndex)) {
++  const s = n.style || {};
++  if (n.semanticType === "text") {
++    slide.addText(n.text, { ...geo(n),
++      fontFace: s.fontFamily, fontSize: pt(s.fontSizePx || 16), color: s.color || "000000",
++      bold: (s.fontWeight || 400) >= 700, italic: !!s.italic, align: s.align || "left",
++      valign: "top", margin: 0, transparency: transp(s) });
++    count("text", true);
++  } else if (n.semanticType === "shape") {
++    slide.addShape(n.shape === "roundRect" ? "roundRect" : "rect", { ...geo(n),
++      fill: s.fillColor ? { color: s.fillColor, transparency: transp(s) } : { type: "none" },
++      line: s.borderColor ? { color: s.borderColor, width: pt(s.borderWidthPx || 1) } : { type: "none" },
++      rectRadius: s.borderRadiusPx ? inch(s.borderRadiusPx) : 0 });
++    count("shape", true);
++  } else if (n.semanticType === "image") {
++    slide.addImage({ path: n.src, ...geo(n) });
++    count("image", true);
++  } else if (n.semanticType === "table") {
++    const NONE = { type: "none" };
++    const rows = n.rows.map((r, ri) => r.map((c) => {
++      const cs = c.style || {};
++      const botPx = cs.borderWidthPx || 0;
++      return { text: c.text, options: {
++        color: cs.color || "000000", fontSize: pt(cs.fontSizePx || 15),
++        bold: (cs.fontWeight || 400) >= 700, align: cs.align || "left",
++        fontFace: cs.fontFamily, valign: "middle", margin: 0.04,
++        fill: cs.fillColor ? { color: cs.fillColor } : { type: "none" },
++        border: [NONE, NONE, botPx ? { pt: pt(botPx), color: cs.borderColor || "000000" } : NONE, NONE],
++        ...(c.colspan ? { colspan: c.colspan } : {}),     // I8 — dom-to-pptx pass-through
++        ...(c.rowspan ? { rowspan: c.rowspan } : {}),     // I8
++      } };
++    }));
++    slide.addTable(rows, { x: inch(n.bbox.x), y: inch(n.bbox.y), w: inch(n.bbox.w), h: inch(n.bbox.h),
++      colW: n.colWidthsPx.map(inch),
++      rowH: (n.rowHeightsPx || []).map(inch),
++      border: NONE, autoPage: false });
++    count("table", true);
++  } else if (n.semanticType === "chart") {
++    const axisColor = "788CA0";
++    slide.addChart(pptx.ChartType.bar, n.series.map((sr) => ({
++      name: sr.name, labels: n.categories, values: sr.values,
++    })), { ...geo(n), barDir: "col",
++      chartColors: n.series.map((sr) => sr.color || "4ECCA3"),
++      catAxisLabelColor: axisColor, valAxisLabelColor: axisColor,
++      catAxisLineColor: axisColor, valAxisLineColor: axisColor,
++      dataLabelColor: "E8E8E8", showLegend: false,
++      valGridLine: { color: "2A3B5C", size: 0.5 } });
++    count("chart", true);
++  } else {
++    slide.addImage({ path: n.src || "", ...geo(n) });   // fallbackRegion (logged)
++    console.warn(`FALLBACK ${n.sourceRef}: ${n.reason || "unmapped"}`);
++    count(n.semanticType, false);
++  }
++}
++}
++
++await pptx.writeFile({ fileName: outPath });
++
++// L6 — dom-to-pptx pptx-normalizer: strip dangling [Content_Types].xml Overrides
++// (PowerPoint refuses files advertising parts that don't exist in the package)
++const zip = await JSZip.loadAsync(fs.readFileSync(outPath));
++await normalizePptxZip(zip);
++fs.writeFileSync(outPath, await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" }));
++const total = stats.native + stats.fallback;
++const report = { out: outPath, nodes: total, editabilityScore: +(stats.native / total).toFixed(3), ...stats };
++fs.writeFileSync(outPath.replace(/\.pptx$/, ".mapreport.json"), JSON.stringify(report, null, 1));
++console.log(JSON.stringify(report));
+diff --git a/src/validate/README.md b/src/validate/README.md
+new file mode 100644
+index 0000000..4934494
+--- /dev/null
++++ b/src/validate/README.md
+@@ -0,0 +1,13 @@
++# src/validate — 4-layer validation gates
++
++| Layer | Script | Checks | Gate |
++|---|---|---|---|
++| A semantic | `validate_ab.py` | bag-of-lines text preservation per slide (+ Jaccard) | missing=0 |
++| B media | `validate_ab.py` | MD5 of source assets ↔ pptx-embedded media | all matched |
++| C visual | `pixel_c.mjs` | pixelmatch on WeasyPrint vs LibreOffice renders; chart bboxes masked | diffPct < 5 |
++| D geometric | `layout_d.py` | per-object IoU: IR bbox (intent) vs OOXML xfrm (declared) | worstIoU > 0.90, no critical |
++
++Layer D exists because renderers auto-repair wrong declared geometry — pixel
++diff alone misses it (docs/lessons.md #13). Chart regions are excluded from C
++and validated semantically via IR instead (#15). Orchestrated by `run.sh`
++(A+B and render prep run as parallel subflows).
+diff --git a/src/validate/layout_d.py b/src/validate/layout_d.py
+new file mode 100644
+index 0000000..0f74b4d
+--- /dev/null
++++ b/src/validate/layout_d.py
+@@ -0,0 +1,89 @@
++#!/usr/bin/env python3
++"""Layer D: layout tolerance — per-object IoU between IR bbox (intent) and
++output OOXML xfrm geometry (result). Implements critique #13 (tolerance model)
++and #14 (report actionable by source object via sourceRef).
++Usage: python3 layout_d.py out/deck.ir.json out/deck.pptx
++"""
++import sys, json, re, zipfile
++from collections import Counter
++
++EMU_PER_PX = 9525  # 914400 EMU/inch ÷ 96 px/inch
++
++def norm(s): return re.sub(r"\s+", " ", s).strip()
++
++def pptx_objects(pptx_path):
++    """Per-slide objects with px bboxes from slide XML. Types: text|image|frame(table/chart)."""
++    z = zipfile.ZipFile(pptx_path)
++    slides = sorted((n for n in z.namelist()
++                     if re.fullmatch(r"ppt/slides/slide\d+\.xml", n)),
++                    key=lambda n: int(re.search(r"\d+", n).group()))
++    out = []
++    for name in slides:
++        x = z.read(name).decode()
++        objs = []
++        # shapes with text, pictures, graphic frames — capture xfrm + kind
++        for m in re.finditer(
++            r"<p:(sp|pic|graphicFrame)\b.*?</p:\1>", x, re.S):
++            kind, body = m.group(1), m.group(0)
++            off = re.search(r"<a:off x=\"(-?\d+)\" y=\"(-?\d+)\"", body)
++            ext = re.search(r"<a:ext cx=\"(\d+)\" cy=\"(\d+)\"", body)
++            if not (off and ext): continue
++            bb = {"x": int(off.group(1)) / EMU_PER_PX, "y": int(off.group(2)) / EMU_PER_PX,
++                  "w": int(ext.group(1)) / EMU_PER_PX, "h": int(ext.group(2)) / EMU_PER_PX}
++            text = norm(" ".join(re.findall(r"<a:t>([^<]*)</a:t>", body)))
++            objs.append({"kind": {"sp": "text", "pic": "image", "graphicFrame": "frame"}[kind],
++                         "text": text, "bbox": bb})
++        out.append(objs)
++    return out
++
++def iou(a, b):
++    x1, y1 = max(a["x"], b["x"]), max(a["y"], b["y"])
++    x2 = min(a["x"] + a["w"], b["x"] + b["w"])
++    y2 = min(a["y"] + a["h"], b["y"] + b["h"])
++    inter = max(0, x2 - x1) * max(0, y2 - y1)
++    union = a["w"] * a["h"] + b["w"] * b["h"] - inter
++    return round(inter / union, 3) if union > 0 else 0.0
++
++def severity(v): return "ok" if v >= 0.90 else ("warn" if v >= 0.50 else "critical")
++
++def run(ir_path, pptx_path):
++    ir = json.load(open(ir_path))
++    rendered = pptx_objects(pptx_path)
++    report, worst = [], 1.0
++    for si, sl in enumerate(ir["slides"]):
++        objs = rendered[si] if si < len(rendered) else []
++        frames = [o for o in objs if o["kind"] == "frame"]
++        pics = [o for o in objs if o["kind"] == "image"]
++        texts = {o["text"]: o for o in objs if o["kind"] == "text" and o["text"]}
++        fi = 0
++        for n in sl["nodes"]:
++            match = None
++            if n["semanticType"] == "text":
++                match = texts.get(norm(n["text"]))
++            elif n["semanticType"] in ("table", "chart"):
++                if fi < len(frames): match = frames[fi]; fi += 1
++            elif n["semanticType"] == "image":
++                if pics: match = pics.pop(0)
++            elif n["semanticType"] == "shape":
++                # shapes carry no text; match nearest empty-text sp by IoU
++                cands = [o for o in objs if o["kind"] == "text" and not o["text"]]
++                match = max(cands, key=lambda o: iou(n["bbox"], o["bbox"]), default=None)
++            if match is None:
++                report.append({"slide": si + 1, "sourceRef": n["sourceRef"],
++                               "type": n["semanticType"], "iou": 0.0, "severity": "critical",
++                               "note": "no rendered counterpart"})
++                worst = 0.0
++                continue
++            v = iou(n["bbox"], match["bbox"])
++            worst = min(worst, v)
++            report.append({"slide": si + 1, "sourceRef": n["sourceRef"],
++                           "type": n["semanticType"], "iou": v, "severity": severity(v)})
++    sev = Counter(r["severity"] for r in report)
++    out = {"layerD_layout": {"pass": sev.get("critical", 0) == 0, "objects": len(report),
++                             "bySeverity": dict(sev), "worstIoU": worst,
++                             "detail": [r for r in report if r["severity"] != "ok"]}}
++    print(json.dumps(out, ensure_ascii=False, indent=1))
++    return 0 if out["layerD_layout"]["pass"] else 1
++
++if __name__ == "__main__":
++    sys.exit(run(sys.argv[1], sys.argv[2]))
+diff --git a/src/validate/pixel_c.mjs b/src/validate/pixel_c.mjs
+new file mode 100644
+index 0000000..816aa03
+--- /dev/null
++++ b/src/validate/pixel_c.mjs
+@@ -0,0 +1,32 @@
++// Layer C: visual fidelity via mapbox/pixelmatch (per third_party manifest).
++// Usage: node src/validate/pixel_c.mjs out/render_src.png out/render_out.png out/diff.png
++import fs from "node:fs";
++import { PNG } from "pngjs";
++import pixelmatch from "pixelmatch";
++
++const [, , aPath, bPath, dPath, masksPath, pageIdx] = process.argv;
++const A = PNG.sync.read(fs.readFileSync(aPath));
++const B = PNG.sync.read(fs.readFileSync(bPath));
++if (A.width !== B.width || A.height !== B.height) {
++  console.error(`size mismatch ${A.width}x${A.height} vs ${B.width}x${B.height}`); process.exit(2);
++}
++// mask: zero both buffers inside chart bboxes — those regions pass via semantic Layer A′/IR
++let maskedPx = 0;
++if (masksPath && fs.existsSync(masksPath)) {
++  const rects = (JSON.parse(fs.readFileSync(masksPath, "utf8"))[+pageIdx - 1] || []);
++  for (const r of rects) {
++    const x0 = Math.max(0, r.x | 0), y0 = Math.max(0, r.y | 0);
++    const x1 = Math.min(A.width, Math.ceil(r.x + r.w)), y1 = Math.min(A.height, Math.ceil(r.y + r.h));
++    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
++      const i = (y * A.width + x) * 4;
++      A.data[i] = A.data[i+1] = A.data[i+2] = B.data[i] = B.data[i+1] = B.data[i+2] = 0;
++      A.data[i+3] = B.data[i+3] = 255; maskedPx++;
++    }
++  }
++}
++const diff = new PNG({ width: A.width, height: A.height });
++const bad = pixelmatch(A.data, B.data, diff.data, A.width, A.height, { threshold: 0.1 });
++fs.writeFileSync(dPath, PNG.sync.write(diff));
++const denom = A.width * A.height - maskedPx;
++const pct = +(100 * bad / denom).toFixed(2);
++console.log(JSON.stringify({ layerC_visual: { mismatchedPx: bad, comparedPx: denom, maskedPx, diffPct: pct, diffImage: dPath } }));
+diff --git a/src/validate/validate_ab.py b/src/validate/validate_ab.py
+new file mode 100644
+index 0000000..4b2730e
+--- /dev/null
++++ b/src/validate/validate_ab.py
+@@ -0,0 +1,92 @@
++#!/usr/bin/env python3
++"""Layer A: semantic preservation (bag-of-lines, reused from the diff parser).
++Layer B: media integrity (MD5 content hashing, reused from the diff parser).
++Usage: python3 validate_ab.py fixtures/slide13.html out/slide13.pptx
++"""
++import sys, re, subprocess, hashlib, zipfile, os, json
++from collections import Counter
++from html.parser import HTMLParser
++
++def norm(s):  # identical normalization to compare_content.py
++    return re.sub(r"\s+", " ", s).strip()
++
++class TextGrab(HTMLParser):
++    def __init__(self):
++        super().__init__(); self.lines, self.skip = [], 0
++    def handle_starttag(self, tag, attrs):
++        if tag in ("style", "script"): self.skip += 1
++    def handle_endtag(self, tag):
++        if tag in ("style", "script"): self.skip -= 1
++    def handle_data(self, d):
++        if not self.skip and d.strip(): self.lines.append(norm(d))
++
++def html_lines(path):
++    g = TextGrab(); g.feed(open(path, encoding="utf-8").read())
++    return Counter(g.lines)
++
++def html_slide_lines(path):
++    """Per-slide Counters. Slides delimited by <section ...class=...slide...>; fallback: whole doc.
++    <svg> blocks removed — chart content is validated semantically (IR), not as text lines."""
++    raw = open(path, encoding="utf-8").read()
++    raw = re.sub(r"<svg\b.*?</svg>", "", raw, flags=re.S)
++    chunks = re.split(r"<section[^>]*class=[\"'][^\"']*slide[^\"']*[\"'][^>]*>", raw)
++    bodies = chunks[1:] if len(chunks) > 1 else [raw]
++    out = []
++    for b in bodies:
++        g = TextGrab(); g.feed(b.split("</section>")[0])
++        out.append(Counter(g.lines))
++    return out
++
++def pptx_slide_lines(path):
++    """Per-slide Counters from extract-text '## Slide N' blocks."""
++    out_txt = subprocess.run(["extract-text", path], capture_output=True, text=True).stdout
++    slides, cur = [], None
++    for l in out_txt.splitlines():
++        if l.startswith("## Slide"):
++            if cur is not None: slides.append(cur)
++            cur = Counter()
++        elif cur is not None and l.strip():
++            cur[norm(l)] += 1
++    if cur is not None: slides.append(cur)
++    return slides
++
++def jaccard(a, b):
++    """Token-set Jaccard |A∩B|/|A∪B| — reused from the diff parser's provenance engine."""
++    ta = set(t for line in a for t in line.split())
++    tb = set(t for line in b for t in line.split())
++    return round(len(ta & tb) / len(ta | tb), 3) if (ta | tb) else 1.0
++
++def layer_a(html_path, pptx_path):
++    src_slides = html_slide_lines(html_path)
++    dst_slides = pptx_slide_lines(pptx_path)
++    per = []
++    ok = len(src_slides) == len(dst_slides)
++    for i in range(max(len(src_slides), len(dst_slides))):
++        src = src_slides[i] if i < len(src_slides) else Counter()
++        dst = dst_slides[i] if i < len(dst_slides) else Counter()
++        missing = src - dst          # content LOST
++        extra = dst - src            # content INVENTED
++        if missing: ok = False
++        per.append({"slide": i + 1, "sourceLines": sum(src.values()),
++                    "missing": sorted(missing), "extra": sorted(extra),
++                    "jaccard": jaccard(src, dst)})
++    return {"pass": ok, "slides": {"html": len(src_slides), "pptx": len(dst_slides)}, "perSlide": per}
++
++def layer_b(html_dir, pptx_path):
++    src_hashes = {}
++    for f in os.listdir(html_dir):
++        if f.lower().endswith((".png", ".jpg", ".jpeg", ".gif")):
++            src_hashes[hashlib.md5(open(os.path.join(html_dir, f), "rb").read()).hexdigest()] = f
++    z = zipfile.ZipFile(pptx_path)
++    out_hashes = {hashlib.md5(z.read(n)).hexdigest(): n
++                  for n in z.namelist() if n.startswith("ppt/media/")}
++    missing = {h: f for h, f in src_hashes.items() if h not in out_hashes}
++    return {"pass": not missing, "sourceAssets": len(src_hashes),
++            "matched": len(src_hashes) - len(missing), "missing": list(missing.values())}
++
++if __name__ == "__main__":
++    html_path, pptx_path = sys.argv[1], sys.argv[2]
++    rep = {"layerA_semantic": layer_a(html_path, pptx_path),
++           "layerB_media": layer_b(os.path.dirname(os.path.abspath(html_path)), pptx_path)}
++    print(json.dumps(rep, ensure_ascii=False, indent=1))
++    sys.exit(0 if rep["layerA_semantic"]["pass"] and rep["layerB_media"]["pass"] else 1)
+-- 
+2.43.0
+

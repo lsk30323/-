@@ -1,0 +1,38 @@
+{
+ "layerA_semantic": {
+  "pass": true,
+  "slides": {
+   "html": 3,
+   "pptx": 3
+  },
+  "perSlide": [
+   {
+    "slide": 1,
+    "sourceLines": 19,
+    "missing": [],
+    "extra": [],
+    "jaccard": 1.0
+   },
+   {
+    "slide": 2,
+    "sourceLines": 14,
+    "missing": [],
+    "extra": [],
+    "jaccard": 1.0
+   },
+   {
+    "slide": 3,
+    "sourceLines": 3,
+    "missing": [],
+    "extra": [],
+    "jaccard": 1.0
+   }
+  ]
+ },
+ "layerB_media": {
+  "pass": true,
+  "sourceAssets": 1,
+  "matched": 1,
+  "missing": []
+ }
+}

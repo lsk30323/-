@@ -1,0 +1,181 @@
+From d9e0ec3898fdf049e556487417824c405f4d0ef2 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 3 Jul 2026 12:22:58 +0000
+Subject: [PATCH 2/4] test: add acceptance fixtures (3-slide deck, single
+ slide, logo asset)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+fixtures/deck.html exercises colspan/rowspan tables, opacity, overflow
+clipping, images, and both chart-recovery tiers; slide13.html is the
+original single-slide fixture. logo.png is regenerated deterministically
+(stdlib PNG writer) because the original binary was not recoverable from
+the handoff packet — Layer B hashes source vs embedded of the same file,
+so the gate is unaffected (see docs/lessons.md #17).
+
+Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01Gcgys3b7VQXjNZ4dEzos8n
+---
+ fixtures/deck.html    |  89 ++++++++++++++++++++++++++++++++++++++++++
+ fixtures/logo.png     | Bin 0 -> 366 bytes
+ fixtures/slide13.html |  33 ++++++++++++++++
+ 3 files changed, 122 insertions(+)
+ create mode 100644 fixtures/deck.html
+ create mode 100644 fixtures/logo.png
+ create mode 100644 fixtures/slide13.html
+
+diff --git a/fixtures/deck.html b/fixtures/deck.html
+new file mode 100644
+index 0000000..fda9696
+--- /dev/null
++++ b/fixtures/deck.html
+@@ -0,0 +1,89 @@
++<!DOCTYPE html>
++<html><head><meta charset="utf-8"><style>
++@page { size: 1280px 720px; margin: 0; }
++* { margin: 0; padding: 0; box-sizing: border-box; }
++body { font-family: "Noto Sans CJK KR", sans-serif; }
++section.slide { width: 1280px; height: 720px; position: relative; background: #0f1729; }
++section.slide:not(:last-of-type) { page-break-after: always; }
++
++.title    { position: absolute; left: 80px; top: 48px; font-size: 40px; font-weight: 700; color: #4ecca3; }
++.subtitle { position: absolute; left: 80px; top: 104px; font-size: 20px; color: #788ca0; }
++.logo     { position: absolute; left: 1136px; top: 48px; width: 64px; height: 64px; }
++.stamp    { position: absolute; left: 940px; top: 120px; font-size: 28px; font-weight: 700;
++            color: #e8e8e8; opacity: 0.35; }
++.card     { position: absolute; left: 80px; top: 160px; width: 1120px; height: 470px;
++            background: #16213e; border: 2px solid #4ecca3; border-radius: 16px; }
++.clipwrap { position: absolute; left: 100px; top: 596px; width: 160px; height: 22px;
++            overflow: hidden; }
++.strip    { width: 420px; height: 22px; background: #2a8f6f; }
++.footer   { position: absolute; left: 80px; top: 656px; font-size: 16px; color: #788ca0; }
++
++table.t1  { position: absolute; left: 120px; top: 190px; width: 1040px; border-collapse: collapse; }
++table.t2  { position: absolute; left: 120px; top: 200px; width: 1040px; border-collapse: collapse; }
++th { font-size: 18px; font-weight: 700; color: #4ecca3; padding: 9px 16px;
++     border-bottom: 2px solid #4ecca3; text-align: center; }
++td { font-size: 15px; color: #e8e8e8; padding: 8px 16px;
++     border-bottom: 1px solid #2a3b5c; text-align: center; }
++</style></head><body>
++
++<section class="slide">
++  <p class="title">08 AI Project: ReCoCo</p>
++  <p class="subtitle">iOS 사진 삭제 추천 서비스 — Before / After</p>
++  <p class="stamp">DRAFT</p>
++  <img class="logo" src="logo.png">
++  <div class="card"></div>
++  <table class="t1">
++    <tr><th colspan="2">개선 전후 비교</th></tr>
++    <tr><th>Before</th><th>After</th></tr>
++    <tr><td>JS 메인 스레드 랭킹 동기 실행, UI 차단</td><td>Native Day-key 브랜치, JS 브릿지 대기 제거</td></tr>
++    <tr><td>AI 앱 오픈과 동시 실행, 런처 속도 저해</td><td>AI 실행 경로 완전 분리, 기록 의도 시점에만 실행</td></tr>
++    <tr><td>캐시 히트 시 재빌드, 인코딩 오버헤드</td><td>Render-ready 화면 캐시, 히트 즉시 렌더링</td></tr>
++    <tr><td>실행 시 사진첩 전체 스캔, Cold Start 지연</td><td>백그라운드 사전 큐레이션, 미리 준비</td></tr>
++    <tr><td>데이터 로드 시점 측정, p95 신뢰 불가</td><td>Paint 지점 계측 도입, 실제 렌더 기준</td></tr>
++    <tr><td>기록·스킵 액션 미반영, 동일 사진 반복 노출</td><td>통합 뮤테이션 클로저, 모든 액션 즉시 반영</td></tr>
++  </table>
++  <div class="clipwrap"><div class="strip"></div></div>
++  <p class="footer">2026.01 - 진행중 | 2인 (현업 IT임원 + 본인)</p>
++</section>
++
++<section class="slide">
++  <p class="title">검증 요약</p>
++  <p class="subtitle">3-layer validation 결과</p>
++  <div class="card"></div>
++  <table class="t2">
++    <tr><th>구분</th><th>레이어</th><th>결과</th></tr>
++    <tr><td rowspan="2">의미 계층</td><td>A 텍스트 보존</td><td>17/17 보존</td></tr>
++    <tr><td>B 미디어 무결성</td><td>MD5 1/1 일치</td></tr>
++    <tr><td>시각 계층</td><td>C 픽셀 diff</td><td>2.85% (기준 5%)</td></tr>
++  </table>
++  <p class="footer">editability score 1.0 | rule-based only</p>
++</section>
++
++<section class="slide">
++  <p class="title">월별 처리량</p>
++  <p class="subtitle">rule-based chart recovery — 두 가지 티어</p>
++  <div class="card"></div>
++  <svg width="460" height="320" style="position:absolute;left:140px;top:220px"
++       data-chart="bar" data-name="처리 건수" data-color="4ecca3"
++       data-categories='["1월","2월","3월","4월"]' data-values='[120,180,150,210]'>
++    <rect class="bar" x="40"  y="148" width="70" height="132" fill="#4ecca3"/>
++    <rect class="bar" x="150" y="82"  width="70" height="198" fill="#4ecca3"/>
++    <rect class="bar" x="260" y="115" width="70" height="165" fill="#4ecca3"/>
++    <rect class="bar" x="370" y="49"  width="70" height="231" fill="#4ecca3"/>
++  </svg>
++  <svg width="460" height="320" style="position:absolute;left:680px;top:220px">
++    <text x="8"  y="284" font-size="12" fill="#788ca0">0</text>
++    <text x="2"  y="64"  font-size="12" fill="#788ca0">200</text>
++    <rect class="bar" x="60"  y="170" width="60" height="110" fill="#2a8f6f"/>
++    <rect class="bar" x="160" y="115" width="60" height="165" fill="#2a8f6f"/>
++    <rect class="bar" x="260" y="225" width="60" height="55"  fill="#2a8f6f"/>
++    <rect class="bar" x="360" y="60"  width="60" height="220" fill="#2a8f6f"/>
++    <text x="80"  y="302" font-size="13" fill="#788ca0">Q1</text>
++    <text x="180" y="302" font-size="13" fill="#788ca0">Q2</text>
++    <text x="280" y="302" font-size="13" fill="#788ca0">Q3</text>
++    <text x="380" y="302" font-size="13" fill="#788ca0">Q4</text>
++  </svg>
++  <p class="footer">tier1: data-* 속성 (source first) | tier2: SVG 마크 + 축 스케일 역산</p>
++</section>
++
++</body></html>
+diff --git a/fixtures/logo.png b/fixtures/logo.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..c6d851c8fff591752fca139b48248e20d85a0bf7
+GIT binary patch
+literal 366
+zcmV-!0g?WRP)<h;3K|Lk000e1NJLTq002M$002M;0ssI2B@5<>0003sNkl<Zc-rln
+z>kYy{41>Kw7h_4*VJKcgAPVJL5+@&`;s?*fM%SD#v8KzlJM3|fD{@V@i-`VA;PC|x
+z{pq>pZ-LO?2~ar9L2CKq=IEaZbms65n8v@_5dCWc-8d|R(YBv8LBB+x1BVd+`aVP<
+z`p*QaIE*J%Y&bLeQ36g5YZECiv;qA(0@)n41(zpHURXJkWdxKzWo#%_C5{TB!t^13
+zfvOfj)FM>LA`ZNT<S!$!MNH;W7+!+q+>A0dLD@Fcq%B+?Ns}j{WRPX45>VN~I9r6v
+zAnsF-5Pt$cxrEp^F}sYiH!`-AV2e4noMs<r*hfnCp`P7VVK=tetwnZom)%}x4>;H(
+zCiakzJ!WMOy4h9(w%LPiw_zKe*p@T4>5px@WE)@E)?>W+n{K~90;h<M$Z9o|OaK4?
+M07*qoM6N<$f^yNEI{*Lx
+
+literal 0
+HcmV?d00001
+
+diff --git a/fixtures/slide13.html b/fixtures/slide13.html
+new file mode 100644
+index 0000000..8c2aec5
+--- /dev/null
++++ b/fixtures/slide13.html
+@@ -0,0 +1,33 @@
++<!DOCTYPE html>
++<html><head><meta charset="utf-8"><style>
++@page { size: 1280px 720px; margin: 0; }
++* { margin: 0; padding: 0; box-sizing: border-box; }
++body { width: 1280px; height: 720px; background: #0f1729;
++       font-family: "Noto Sans CJK KR", sans-serif; position: relative; }
++.title    { position: absolute; left: 80px; top: 48px; font-size: 40px; font-weight: 700; color: #4ecca3; }
++.subtitle { position: absolute; left: 80px; top: 104px; font-size: 20px; color: #788ca0; }
++.logo     { position: absolute; left: 1136px; top: 48px; width: 64px; height: 64px; }
++.card     { position: absolute; left: 80px; top: 160px; width: 1120px; height: 460px;
++            background: #16213e; border: 2px solid #4ecca3; border-radius: 16px; }
++table     { position: absolute; left: 120px; top: 192px; width: 1040px; border-collapse: collapse; }
++th { font-size: 18px; font-weight: 700; color: #4ecca3; padding: 10px 16px;
++     border-bottom: 2px solid #4ecca3; text-align: center; }
++td { font-size: 15px; color: #e8e8e8; padding: 9px 16px;
++     border-bottom: 1px solid #2a3b5c; text-align: center; }
++.footer { position: absolute; left: 80px; top: 648px; font-size: 16px; color: #788ca0; }
++</style></head><body>
++  <p class="title">08 AI Project: ReCoCo</p>
++  <p class="subtitle">iOS 사진 삭제 추천 서비스 — Before / After</p>
++  <img class="logo" src="logo.png">
++  <div class="card"></div>
++  <table>
++    <tr><th>Before</th><th>After</th></tr>
++    <tr><td>JS 메인 스레드 랭킹 동기 실행, UI 차단</td><td>Native Day-key 브랜치, JS 브릿지 대기 제거</td></tr>
++    <tr><td>AI 앱 오픈과 동시 실행, 런처 속도 저해</td><td>AI 실행 경로 완전 분리, 기록 의도 시점에만 실행</td></tr>
++    <tr><td>캐시 히트 시 재빌드, 인코딩 오버헤드</td><td>Render-ready 화면 캐시, 히트 즉시 렌더링</td></tr>
++    <tr><td>실행 시 사진첩 전체 스캔, Cold Start 지연</td><td>백그라운드 사전 큐레이션, 미리 준비</td></tr>
++    <tr><td>데이터 로드 시점 측정, p95 신뢰 불가</td><td>Paint 지점 계측 도입, 실제 렌더 기준</td></tr>
++    <tr><td>기록·스킵 액션 미반영, 동일 사진 반복 노출</td><td>통합 뮤테이션 클로저, 모든 액션 즉시 반영</td></tr>
++  </table>
++  <p class="footer">2026.01 - 진행중 | 2인 (현업 IT임원 + 본인)</p>
++</body></html>
+-- 
+2.43.0
+

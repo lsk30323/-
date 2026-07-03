@@ -1,0 +1,14 @@
+{
+ "out": "out/deck.pptx",
+ "nodes": 19,
+ "editabilityScore": 1,
+ "native": 19,
+ "fallback": 0,
+ "byType": {
+  "text": 10,
+  "image": 1,
+  "shape": 4,
+  "table": 2,
+  "chart": 2
+ }
+}
