@@ -1,0 +1,12 @@
+{
+  "graphs" : [ {
+    "id" : "http://purl.obolibrary.org/obo/ro/subsets/ro-chado.owl",
+    "meta" : {
+      "basicPropertyValues" : [ {
+        "pred" : "http://www.w3.org/2002/07/owl#versionInfo",
+        "val" : "2025-12-17"
+      } ],
+      "version" : "http://purl.obolibrary.org/obo/ro/releases/2025-12-17/subsets/ro-chado.owl"
+    }
+  } ]
+}
