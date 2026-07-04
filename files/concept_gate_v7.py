@@ -800,7 +800,7 @@ class ExpansionPlanner:
     LLM을 호출하지 않음. "무엇을 해야 하는가"만 결정."""
 
     @staticmethod
-    def plan(pre_dag_issues, post_dag_issues=None) -> List[ExpansionAction]:
+    def plan(pre_dag_issues, post_dag_issues=None, ap_iss=None) -> List[ExpansionAction]:
         actions = []
 
         for iss in pre_dag_issues:
@@ -836,6 +836,15 @@ class ExpansionPlanner:
                     shared_attrs=iss.get("shared_attrs", []),
                     parent_name=iss.get("shared_parent"),
                     reason="DAG sibling 종차 부족"))
+
+        # [Phase C2] MixRig → CORRECTION (feature type 교정). PartOver/WholeOver는 정보만.
+        for iss in (ap_iss or []):
+            if iss.get("pattern") == "MixRig":
+                actions.append(ExpansionAction(
+                    action_type=ExpansionType.CORRECTION,
+                    target_concepts=list(iss.get("involved", [])),
+                    shared_attrs=[iss["subject"]] if iss.get("subject") else [],
+                    reason=iss.get("detail", "rigidity 혼합 → feature type 교정 필요")))
 
         return ExpansionPlanner._dedup(actions)
 
@@ -1331,6 +1340,237 @@ class ExpansionHistoryAnalyzer:
 
 
 # ═══════════════════════════════════════════════════════
+# CompositionGate (v7 Phase C1)
+# ═══════════════════════════════════════════════════════
+
+class CompositionGate:
+    """구성(has-a) 그래프의 mereology 공리 검증 (Phase C1).
+
+    공리 출처: vendor/obo-relations core.obo (BFO:0000050/51)
+    - 반대칭: 서로가 서로의 부분일 수 없음 (proper parthood)
+    - 비순환: 부분명이 개념명과 일치하는 간선만 추이 폐쇄 → 자기 도달 시 위반
+    - is-a/has-a 배타: DAG 조상·자손 관계인 두 개념 사이 has_part 간선 금지
+    - 자기 부분: (A, A) 간선 — 고전 mereology는 반사 허용이나 모델링에선 의심
+    """
+
+    @staticmethod
+    def _reachable(graph: Dict[str, List[str]], start: str) -> Set[str]:
+        # graph[a] = [자손...]; start에서 도달 가능한 노드 집합 (순환 시 start 재포함)
+        seen: Set[str] = set()
+        stack = list(graph.get(start, []))
+        while stack:
+            n = stack.pop()
+            if n in seen: continue
+            seen.add(n)
+            stack.extend(graph.get(n, []))
+        return seen
+
+    @staticmethod
+    def _is_ancestor(dag: Dict[str, List[str]], a: str, b: str) -> bool:
+        # DAG에서 a→...→b 도달 = a가 b의 is-a 조상
+        return b in CompositionGate._reachable(dag, a)
+
+    @staticmethod
+    def detect(reasoner: "DAGReasoner") -> Tuple[GateReport, List[Dict]]:
+        report = GateReport(target="[CompositionGate]")
+        issues: List[Dict] = []
+        comp = reasoner.composition_view()
+        edges = comp["edges"]                        # (전체, 부분) 쌍
+        edge_set = set(edges)
+        names = {c.name for c in reasoner.concepts}  # 개념명 집합
+        dag = dict(reasoner.dag)
+
+        # 검사 1: 반대칭 — (A,B)와 (B,A) 동시 (ERROR)
+        anti_seen: Set[Tuple[str, str]] = set()
+        for (w, p) in edges:
+            if w != p and (p, w) in edge_set:
+                key = tuple(sorted((w, p)))
+                if key in anti_seen: continue
+                anti_seen.add(key)
+                issues.append({"kind": "antisymmetry", "whole": w, "part": p,
+                    "detail": f"{w}⊃{p} 와 {p}⊃{w} 동시 — proper parthood 반대칭 위반"})
+        report.results.append(GateResult(
+            "Composition Gate: 반대칭", not anti_seen,
+            f"반대칭 위반 {len(anti_seen)}건" if anti_seen else "ok",
+            {"pairs": sorted(anti_seen)},
+            GateSeverity.ERROR if anti_seen else GateSeverity.INFO))
+
+        # 검사 2: 비순환 — 부분명이 개념명인 간선만 추이 폐쇄 (ERROR)
+        cyc_graph: Dict[str, List[str]] = defaultdict(list)
+        for (w, p) in edges:
+            if p in names and p != w:      # 자기루프는 검사 4에서 처리
+                cyc_graph[w].append(p)
+        cyc_graph = dict(cyc_graph)
+        cyc_nodes = sorted(n for n in names
+                           if n in CompositionGate._reachable(cyc_graph, n))
+        for n in cyc_nodes:
+            issues.append({"kind": "cycle", "whole": n, "part": n,
+                "detail": f"{n}이(가) 구성 추이폐쇄에서 자기 자신에 도달 — 순환"})
+        report.results.append(GateResult(
+            "Composition Gate: 비순환", not cyc_nodes,
+            f"순환 노드 {cyc_nodes}" if cyc_nodes else "ok",
+            {"cycle_nodes": cyc_nodes},
+            GateSeverity.ERROR if cyc_nodes else GateSeverity.INFO))
+
+        # 검사 3: is-a/has-a 배타 — 조상-자손 개념 쌍에 has_part 간선 (NEEDS_CORRECTION)
+        conflicts: List[Tuple[str, str]] = []
+        for (w, p) in edges:
+            if w == p or p not in names: continue
+            if CompositionGate._is_ancestor(dag, w, p) or CompositionGate._is_ancestor(dag, p, w):
+                if (w, p) in conflicts: continue
+                conflicts.append((w, p))
+                issues.append({"kind": "isa_hasa_conflict", "whole": w, "part": p,
+                    "detail": f"{w}와 {p}는 is-a 조상-자손인데 has_part 간선도 존재 — is-a/has-a 혼동"})
+        report.results.append(GateResult(
+            "Composition Gate: is-a/has-a 배타", not conflicts,
+            f"배타 위반 {conflicts}" if conflicts else "ok",
+            {"conflicts": conflicts},
+            GateSeverity.NEEDS_CORRECTION if conflicts else GateSeverity.INFO))
+
+        # 검사 4: 자기 부분 — (A,A) 간선 (WARNING, 차단하지 않음)
+        self_parts = sorted({w for (w, p) in edges if w == p})
+        for n in self_parts:
+            issues.append({"kind": "self_part", "whole": n, "part": n,
+                "detail": f"{n}이(가) 자기 자신을 부분으로 가짐 — 모델링 의심"})
+        report.results.append(GateResult(
+            "Composition Gate: 자기부분", True,
+            f"자기부분 {self_parts}" if self_parts else "ok",
+            {"self_parts": self_parts},
+            GateSeverity.WARNING if self_parts else GateSeverity.INFO))
+
+        return report, issues
+
+
+# ═══════════════════════════════════════════════════════
+# UFOAntiPatternGate (v7 Phase C2)
+# ═══════════════════════════════════════════════════════
+
+class UFOAntiPatternGate:
+    """UFO/OntoUML anti-pattern 감지 (Phase C2). 전부 WARNING — 차단하지 않음.
+
+    감지 3종 (근거: UFO/OntoUML 카탈로그, Guizzardi 2021):
+      - MixRig  : 같은 feature명이 ESSENTIAL(rigid)과 비-ESSENTIAL(anti-rigid)로 혼용
+      - PartOver: shared_parts의 한 부분이 조상-자손 관계인 두 전체에 중복 소속
+      - WholeOver: 한 개념이 STRUCTURAL 부분과 그 특수화를 동시 보유
+    issue dict: {"pattern": ..., "subject": ..., "detail": ..., "involved": [...]}
+    """
+
+    @staticmethod
+    def _is_ancestor(reasoner, a, b) -> bool:
+        """reasoner.dag(부모→자식)에서 a로부터 b 도달 가능한지 BFS. (a==b는 False)"""
+        if a == b:
+            return False
+        seen = set()
+        queue = list(reasoner.dag.get(a, []))
+        while queue:
+            node = queue.pop(0)
+            if node == b:
+                return True
+            if node in seen:
+                continue
+            seen.add(node)
+            queue.extend(reasoner.dag.get(node, []))
+        return False
+
+    @staticmethod
+    def detect(reasoner, concepts) -> Tuple[GateReport, List[Dict]]:
+        report = GateReport(target="[UFOAntiPatternGate]")
+        issues = []
+
+        # MixRig — feature명별 type 집합에 ESSENTIAL과 비-ESSENTIAL 공존
+        feature_types = defaultdict(set)   # feature명 → {FeatureType,...}
+        for c in concepts:
+            for f in c.features:
+                feature_types[f.feature].add(f.type)
+        for feat_name, types in feature_types.items():
+            if FeatureType.ESSENTIAL in types and any(t != FeatureType.ESSENTIAL for t in types):
+                involved = sorted({c.name for c in concepts
+                                   for f in c.features if f.feature == feat_name})
+                iss = {"pattern": "MixRig", "subject": feat_name,
+                       "detail": f'"{feat_name}" rigidity 혼합: {sorted(t.value for t in types)}',
+                       "involved": involved}
+                issues.append(iss)
+                report.results.append(GateResult(
+                    "UFO Anti-Pattern Gate", True, f"MixRig: {feat_name}",
+                    iss, GateSeverity.WARNING))
+
+        # PartOver — shared_parts의 부분을 소유한 전체들 중 조상-자손 쌍 존재
+        for part, wholes in reasoner.composition_view()["shared_parts"].items():
+            for w1, w2 in combinations(wholes, 2):
+                if (UFOAntiPatternGate._is_ancestor(reasoner, w1, w2)
+                        or UFOAntiPatternGate._is_ancestor(reasoner, w2, w1)):
+                    iss = {"pattern": "PartOver", "subject": part,
+                           "detail": f'부분 "{part}"가 조상-자손 관계인 {[w1, w2]}에 중복 소속',
+                           "involved": [w1, w2]}
+                    issues.append(iss)
+                    report.results.append(GateResult(
+                        "UFO Anti-Pattern Gate", True, f"PartOver: {part}",
+                        iss, GateSeverity.WARNING))
+
+        # WholeOver — 한 개념의 STRUCTURAL 부분 두 개가 조상-자손 관계
+        for c in concepts:
+            parts = [f.feature for f in c.contextual_features
+                     if f.type == FeatureType.STRUCTURAL]
+            for p1, p2 in combinations(parts, 2):
+                if (UFOAntiPatternGate._is_ancestor(reasoner, p1, p2)
+                        or UFOAntiPatternGate._is_ancestor(reasoner, p2, p1)):
+                    iss = {"pattern": "WholeOver", "subject": c.name,
+                           "detail": f'{c.name}가 부분과 그 특수화 {[p1, p2]}를 동시 보유',
+                           "involved": [p1, p2]}
+                    issues.append(iss)
+                    report.results.append(GateResult(
+                        "UFO Anti-Pattern Gate", True, f"WholeOver: {c.name}",
+                        iss, GateSeverity.WARNING))
+
+        if not issues:
+            report.results.append(GateResult(
+                "UFO Anti-Pattern Gate", True, "ok",
+                severity=GateSeverity.INFO))
+        return report, issues
+
+
+# ═══════════════════════════════════════════════════════
+# RCA 관계 스케일링 (Phase C3)
+# ═══════════════════════════════════════════════════════
+
+RCA_SCALING_MARKER = "rca_scaling"        # 파생 피처 evidence 추적 마커
+RCA_SCALING_PREFIX = "∃has_part."         # RCA existential scaling 표기 (∃R.C)
+
+def relational_scaling(concepts: List[NormalizedConcept]) -> List[NormalizedConcept]:
+    """RCA existential scaling 1-pass (Phase C3).
+
+    부분 이름이 개념명과 일치하는 STRUCTURAL 피처를
+    파생 ESSENTIAL 피처 "∃has_part.{부분}"으로 추가한 사본을 반환.
+    파생 피처는 evidence에 'rca_scaling' 마커를 남겨 추적 가능하게 한다.
+    원본 리스트는 변경하지 않는다 (순수 함수). 같은 파생 피처가 이미
+    있으면 추가하지 않음 (멱등 — 재진입 루프에서 안전).
+
+    근거: RCA(Rouane-Hacene 2013)의 관계 속성 ∃R.C. 파생을 ESSENTIAL로
+    두어 DAG 간선 형성에 기여시키되, 원본 STRUCTURAL은 유지해
+    composition_view가 계속 동작. 비개념 부분("엔진"이 개념에 없음)은
+    leaf로 취급 — 파생 없음.
+    """
+    names = {c.name for c in concepts}
+    scaled = []
+    for c in concepts:
+        feats = list(c.features)              # 얕은 사본 — 원본 리스트 불변
+        present = {ft.feature for ft in feats}
+        for ft in c.features:
+            if ft.type != FeatureType.STRUCTURAL or ft.feature not in names:
+                continue
+            derived = f"{RCA_SCALING_PREFIX}{ft.feature}"
+            if derived in present:
+                continue                      # 멱등
+            ev = f"{RCA_SCALING_MARKER}: {c.name} has_part {ft.feature}"
+            feats.append(NormalizedFeature(derived, FeatureType.ESSENTIAL,
+                                           ev, ev, ft.confidence))
+            present.add(derived)
+        scaled.append(NormalizedConcept(name=c.name, features=feats))
+    return scaled
+
+
+
+# ═══════════════════════════════════════════════════════
 # ConceptPipeline
 # ═══════════════════════════════════════════════════════
 
@@ -1359,7 +1599,11 @@ class ConceptPipeline:
         all_reps.append(sig_rep)
         reasoner = DAGReasoner(cleaned)
         if len(cleaned) < 2:
-            return all_reps, all_repairs, all_warnings, reasoner, sig_iss, []
+            comp_rep, comp_iss = CompositionGate.detect(reasoner)
+            all_reps.append(comp_rep)
+            ap_rep, ap_iss = UFOAntiPatternGate.detect(reasoner, cleaned)
+            all_reps.append(ap_rep)
+            return all_reps, all_repairs, all_warnings, reasoner, sig_iss, [], comp_iss, ap_iss
         cmap = {c.name: c for c in cleaned}
         sched = GateScheduler(self.gate, cmap)
         aa = reasoner.collect_ancestors(); prop = reasoner.direct_parents(aa)
@@ -1382,38 +1626,51 @@ class ConceptPipeline:
         post_rep, post_iss = PostDAGSiblingGate.detect(reasoner, cleaned)
         all_reps.append(post_rep)
 
-        return all_reps, all_repairs, all_warnings, reasoner, sig_iss, post_iss
+        # [v7 Phase C1] CompositionGate: has-a 그래프 mereology 공리 검증
+        comp_rep, comp_iss = CompositionGate.detect(reasoner)
+        all_reps.append(comp_rep)
+
+        # [v7 Phase C2] UFOAntiPatternGate: MixRig/PartOver/WholeOver (전부 WARNING)
+        ap_rep, ap_iss = UFOAntiPatternGate.detect(reasoner, cleaned)
+        all_reps.append(ap_rep)
+
+        return all_reps, all_repairs, all_warnings, reasoner, sig_iss, post_iss, comp_iss, ap_iss
 
     def run(self, cands_per_round):
         hist, prompts = [], []
         reasoner = None
         for ri, cands in enumerate(cands_per_round):
             if ri >= self.max_rounds: break
-            reps, repairs, warnings, reasoner, sig_iss, post_iss = self.validate_hierarchy(cands)
+            reps, repairs, warnings, reasoner, sig_iss, post_iss, comp_iss, ap_iss = self.validate_hierarchy(cands)
             hist.append(reps); result = reasoner.finalize()
             status = ResultClassifier.classify(reps, repairs, warnings, sig_iss, bool(result["dag"]))
 
             # [v7] expansion planning
-            exp_actions = ExpansionPlanner.plan(sig_iss, post_iss)
+            exp_actions = ExpansionPlanner.plan(sig_iss, post_iss, ap_iss)
 
             if status != PipelineStatus.FAIL:
                 return {"result": result, "status": status.value, "rounds_used": ri+1,
                         "all_reports": hist, "repairs": repairs, "warnings": warnings,
                         "signature_issues": sig_iss, "post_dag_issues": post_iss,
+                        "composition_issues": comp_iss, "anti_patterns": ap_iss,
                         "expansion_actions": exp_actions, "correction_prompts": prompts}
             prompts.append(CorrectionPromptGenerator.generate_standalone(reps))
         result = reasoner.finalize() if reasoner else {"dag":{},"levels":{},"definitions":{},"aux_relations":{},"isolated":[]}
         return {"result": result, "status": "FAIL", "rounds_used": len(cands_per_round),
                 "all_reports": hist, "repairs": [], "warnings": [],
                 "signature_issues": [], "post_dag_issues": [],
+                "composition_issues": [], "anti_patterns": [],
                 "expansion_actions": [], "correction_prompts": prompts}
 
-    def run_with_expansion(self, initial_concepts, generator=None, max_expansion_rounds=2):
+    def run_with_expansion(self, initial_concepts, generator=None, max_expansion_rounds=2,
+                           rca_scaling=False):
         """확장 루프: 초기 검증 → expansion action → generator → 재진입.
 
         generator: MockExpansionGenerator 또는 실제 LLM generator (.generate(action) → raw JSON).
         generator=None이면 확장 없이 run()과 동일.
         """
+        if rca_scaling:
+            initial_concepts = relational_scaling(initial_concepts)
         out = self.run([initial_concepts])
         history = [{"round": 0, "status": out["status"],
                     "n_concepts": len(initial_concepts),
