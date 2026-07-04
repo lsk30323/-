@@ -851,6 +851,12 @@ EXPANSION_OUTPUT_SCHEMA = {
                                 "feature": {"type": "string"},
                                 "type": {"type": "string"},
                                 "evidence": {"type": "string", "minLength": 4},
+                                "relation_hint": {
+                                    "type": "string",
+                                    "enum": ["is_a", "component_of", "member_of",
+                                             "subcollection_of", "subquantity_of",
+                                             "material_of", "phase_of", "located_in"]
+                                },
                             }
                         }
                     },
@@ -860,6 +866,57 @@ EXPANSION_OUTPUT_SCHEMA = {
         }
     }
 }
+
+
+def _ufo_discrimination_guide(mode: ExpansionType) -> str:
+    """UFO/Winston 기반 is-a vs has-a 판별 가이드 (mode별 섹션 조합).
+
+    DEPTH: A+B+C, WIDTH: A+B, CORRECTION: B+C.
+    A=Winston 3차원 테스트, B=UFO type mapping, C=part-whole 패턴.
+    """
+    section_a = (
+        "<is_a_vs_has_a_test>\n"
+        "후보 속성을 추가하기 전에, 다음 3가지 질문으로 is-a(본질) vs has-a(부분) 관계를 판별하세요:\n"
+        "(1) 기능적 의존성: 전체의 기능이 이 부분에 의존하는가?\n"
+        "    예 → 부분-전체(has-a) 가능성 높음 / 아니오 → 속성·종차(is-a) 가능성 높음\n"
+        "(2) 동질성(homeomerous): 부분이 전체와 같은 종류인가?\n"
+        "    예 → 물질·수량 관계 / 아니오 → 구성요소-통합체 또는 멤버-집합\n"
+        "(3) 분리가능성: 부분을 제거해도 전체의 정체성이 유지되는가?\n"
+        "    예 → 비본질적 부분(functional 또는 contextual_usage) / 아니오 → 본질적 부분이지만 여전히 has-a\n"
+        "핵심 원칙: \"X는 Y의 일종이다\"(is-a)만 essential_feature로. "
+        "\"X는 Y를 가진다/포함한다\"(has-a)는 반드시 다른 type으로.\n"
+        "</is_a_vs_has_a_test>\n"
+    )
+    section_b = (
+        "<ufo_type_mapping>\n"
+        "속성 유형 판별 가이드:\n"
+        "essential_feature (is-a 계층): 정체성 원리를 제공, 모든 인스턴스가 필연적으로 가짐. "
+        "예: 척추동물→척추, 포유류→젖샘·체온조절\n"
+        "functional: 용도·역할·기능에 의한 분류(맥락 의존). 예: 사냥개→사냥용도, 식용식물→식용가능\n"
+        "contextual_usage: 인간의 분류 관행·시장·요리 맥락. 예: 채소→요리에서의 분류\n"
+        "locational: 서식지·분포·생태적 위치. 예: 담수어→민물 서식\n"
+        "social_treatment: 법적 지위·사회적 관행. 예: 멸종위기종→법적 보호 대상\n"
+        "</ufo_type_mapping>\n"
+    )
+    section_c = (
+        "<part_whole_patterns>\n"
+        "has-a로 분류해야 하는 부분-전체 패턴 6가지:\n"
+        "(1) 구성요소-통합체: 엔진은 자동차의 구성요소 → functional\n"
+        "(2) 멤버-집합: 나무는 숲의 구성원 → contextual_usage\n"
+        "(3) 부분-질량: 조각은 파이의 부분 → contextual_usage\n"
+        "(4) 재료-대상: 철은 칼의 재료 → essential_feature (재료는 본질이 될 수 있음)\n"
+        "(5) 단계-과정: 유충은 변태의 단계 → contextual_usage\n"
+        "(6) 장소-영역: 오아시스는 사막의 부분 → locational\n"
+        "주의: 재료-대상(4)만 essential_feature 가능. 나머지 5가지는 반드시 비-essential type을 사용하세요.\n"
+        "</part_whole_patterns>\n"
+    )
+    if mode == ExpansionType.DEPTH:
+        inner = section_a + section_b + section_c
+    elif mode == ExpansionType.WIDTH:
+        inner = section_a + section_b
+    else:  # CORRECTION
+        inner = section_b + section_c
+    return f"\n<discrimination_guide>\n{inner}</discrimination_guide>\n"
 
 
 def build_expansion_prompt(action: ExpansionAction) -> str:
@@ -876,7 +933,10 @@ def build_expansion_prompt(action: ExpansionAction) -> str:
             "다음 개념들이 동일한 essential 속성을 갖고 있어 구분되지 않습니다.\n"
             "각 개념을 구분하는 종차(differentia)를 추가하세요.\n"
             "종차는 다른 개념에는 없고 해당 개념에만 있는 본질적 속성입니다.\n"
+            "중요: 종차는 반드시 is-a(분류적) 속성이어야 합니다.\n"
+            "부분-전체(has-a), 기능, 장소, 사회적 속성은 해당 type으로 표기하세요.\n"
             "</instruction>"
+            + _ufo_discrimination_guide(ExpansionType.DEPTH)
         )
     elif action.action_type == ExpansionType.WIDTH:
         body = (
@@ -885,7 +945,10 @@ def build_expansion_prompt(action: ExpansionAction) -> str:
             f"<existing_children>{targets}</existing_children>\n"
             "<instruction>\n"
             "이 부모 아래에서 아직 다루어지지 않은 새 하위 개념을 제안하세요.\n"
+            "새 개념은 부모와 is-a 관계여야 합니다 (부모의 일종).\n"
+            "부모의 부분(has-a)이나 기능적 역할은 하위 개념이 아닙니다.\n"
             "</instruction>"
+            + _ufo_discrimination_guide(ExpansionType.WIDTH)
         )
     else:  # CORRECTION
         body = (
@@ -893,7 +956,10 @@ def build_expansion_prompt(action: ExpansionAction) -> str:
             f"<target_concepts>{targets}</target_concepts>\n"
             "<instruction>\n"
             "이 개념들은 essential 속성이 없거나 충돌합니다. 수정하세요.\n"
+            "기존 속성 중 has-a(부분-전체) 관계가 essential로 잘못 분류된 것이\n"
+            "있을 수 있습니다. 아래 가이드를 참고하여 type을 교정하세요.\n"
             "</instruction>"
+            + _ufo_discrimination_guide(ExpansionType.CORRECTION)
         )
 
     schema_hint = (
@@ -903,12 +969,19 @@ def build_expansion_prompt(action: ExpansionAction) -> str:
         '    {\n'
         '      "concept": "개념명",\n'
         '      "new_features": [\n'
-        '        {"feature": "종차명", "type": "essential_feature", "evidence": "근거 텍스트"}\n'
+        '        {\n'
+        '          "feature": "종차명",\n'
+        '          "type": "essential_feature",\n'
+        '          "evidence": "근거 텍스트",\n'
+        '          "relation_hint": "is_a"\n'
+        '        }\n'
         '      ],\n'
         '      "reason": "추가 이유"\n'
         '    }\n'
         '  ]\n'
-        '}'
+        '}\n'
+        'relation_hint 선택지: is_a, component_of, member_of, '
+        'subcollection_of, subquantity_of, material_of, phase_of, located_in'
     )
     return body + schema_hint
 
