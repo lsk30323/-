@@ -1,0 +1,12 @@
+# Codex CLI MCP server 등록 예시
+# 프로젝트 또는 전역 Codex config.toml에 추가
+
+# 방법 1: server.py 직접 실행 (uv venv 사용)
+[mcp_servers.conceptgate]
+command = "/absolute/path/to/conceptgate-mcp/.venv/bin/python"
+args = ["/absolute/path/to/conceptgate-mcp/server.py"]
+
+# 방법 2: 패키지 설치 후 (uv pip install -e .)
+# [mcp_servers.conceptgate]
+# command = "conceptgate-mcp"
+# args = []

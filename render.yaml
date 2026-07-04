@@ -1,0 +1,19 @@
+# 배치 A: 이 파일을 repo 루트에 두고, 서버 파일은 files/ 안에 유지할 때
+# render.yaml 위치: repo 루트 (concept-gate-taxonomy/render.yaml)
+services:
+  - type: web
+    name: conceptgate-mcp
+    runtime: python
+    rootDir: files          # ← 서버 파일이 files/ 안에 있으므로
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py
+    envVars:
+      - key: PORT
+        value: "8000"
+      - key: MCP_API_TOKEN
+        generateValue: true
+      - key: MCP_TRANSPORT
+        value: "http"
+      - key: PYTHON_VERSION
+        value: "3.12"
+    healthCheckPath: /health

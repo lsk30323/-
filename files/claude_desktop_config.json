@@ -1,0 +1,10 @@
+{
+  "_comment_macos": "~/Library/Application Support/Claude/claude_desktop_config.json",
+  "_comment_windows": "%APPDATA%\\Claude\\claude_desktop_config.json",
+  "mcpServers": {
+    "conceptgate": {
+      "command": "/absolute/path/to/conceptgate-mcp/.venv/bin/python",
+      "args": ["/absolute/path/to/conceptgate-mcp/server.py"]
+    }
+  }
+}

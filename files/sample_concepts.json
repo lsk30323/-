@@ -1,0 +1,37 @@
+{
+  "_comment": "run_pipeline / export_graph / classify_parents 입력 예시",
+  "dog_cat_horse_sparse": {
+    "concepts": [
+      {"name": "개", "features": [{"feature": "동물", "type": "essential_feature", "evidence": "살아있는 생명체"}]},
+      {"name": "고양이", "features": [{"feature": "동물", "type": "essential_feature", "evidence": "살아있는 생명체"}]},
+      {"name": "말", "features": [{"feature": "동물", "type": "essential_feature", "evidence": "살아있는 생명체"}]}
+    ]
+  },
+  "square_meet": {
+    "concepts": [
+      {"name": "사각형", "features": [
+        {"feature": "4변", "type": "essential_feature", "evidence": "네 개의 변을 가짐"},
+        {"feature": "4각", "type": "essential_feature", "evidence": "네 개의 꼭짓점"}]},
+      {"name": "직사각형", "features": [
+        {"feature": "4변", "type": "essential_feature", "evidence": "네 개의 변을 가짐"},
+        {"feature": "4각", "type": "essential_feature", "evidence": "네 개의 꼭짓점"},
+        {"feature": "직각", "type": "essential_feature", "evidence": "네 각이 모두 직각"}]},
+      {"name": "마름모", "features": [
+        {"feature": "4변", "type": "essential_feature", "evidence": "네 개의 변을 가짐"},
+        {"feature": "4각", "type": "essential_feature", "evidence": "네 개의 꼭짓점"},
+        {"feature": "등변", "type": "essential_feature", "evidence": "네 변의 길이가 같음"}]},
+      {"name": "정사각형", "features": [
+        {"feature": "4변", "type": "essential_feature", "evidence": "네 개의 변을 가짐"},
+        {"feature": "4각", "type": "essential_feature", "evidence": "네 개의 꼭짓점"},
+        {"feature": "직각", "type": "essential_feature", "evidence": "네 각이 모두 직각"},
+        {"feature": "등변", "type": "essential_feature", "evidence": "네 변의 길이가 같음"}]}
+    ]
+  },
+  "expand_example": {
+    "_comment": "expand 도구 입력: original_concepts(위 dog_cat) + expansions",
+    "expansions": [
+      {"concept": "개", "new_features": [{"feature": "가축화", "type": "essential_feature", "evidence": "인간에 의해 가축화된 동물"}]},
+      {"concept": "고양이", "new_features": [{"feature": "독립성", "type": "essential_feature", "evidence": "독립적 생활이 가능한 동물"}]}
+    ]
+  }
+}

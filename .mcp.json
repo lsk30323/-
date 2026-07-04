@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "conceptgate": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["files/server.py"],
+      "env": {
+        "MCP_TRANSPORT": "stdio"
+      }
+    }
+  }
+}
