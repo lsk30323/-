@@ -703,11 +703,26 @@ class DAGReasoner:
             for f in c.contextual_features:
                 self.aux_graph[(c.name, f.feature)] = f.type.value
 
+    def composition_view(self):
+        """STRUCTURAL(has-a) 피처만 모은 구성 그래프 뷰 (Phase C 최소).
+
+        edges: (전체 개념, 부분) 쌍. DAG(is-a)와 분리된 별도 그래프.
+        shared_parts: 같은 부분이 여러 전체에 속함 — UFO shareable 메타속성.
+        """
+        edges = [(c.name, f.feature) for c in self.concepts
+                 for f in c.contextual_features if f.type == FeatureType.STRUCTURAL]
+        holders = defaultdict(list)
+        for whole, part in edges:
+            holders[part].append(whole)
+        return {"edges": edges,
+                "shared_parts": {p: sorted(ws) for p, ws in holders.items() if len(ws) > 1}}
+
     def finalize(self):
         lv = self.topo_sort(); defs = self.definitions(); self.collect_aux()
         conn = {n for (p, c) in self.edge_meta for n in (p, c)}
         return {"dag": dict(self.dag), "levels": lv, "definitions": defs,
                 "aux_relations": dict(self.aux_graph),
+                "composition": self.composition_view(),
                 "isolated": [c.name for c in self.concepts if c.name not in conn]}
 
 

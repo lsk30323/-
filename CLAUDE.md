@@ -56,16 +56,20 @@ Subtree 갱신: `git subtree pull --prefix vendor/obo-relations https://github.c
 
 ## Project Structure
 
-- `concept_gate_v7.py` -- Core FCA-based concept lattice reasoner (1805 lines)
+- `concept_gate_v7.py` -- Core FCA-based concept lattice reasoner
+- `cg_partwhole.py` -- Part-whole adapter assembling vocabulary from vendor/obo-relations subtree
 - `files/server.py` -- MCP server (FastMCP adapter)
-- `files/concept_gate_v7.py` -- Deployment copy (keep in sync with root)
-- `qa_v7.py` -- QA test suite (63 tests)
+- `files/concept_gate_v7.py`, `files/cg_partwhole.py` -- Deployment copies (keep in sync with root)
+- `qa_v7.py` -- QA test suite (70 tests)
+- `vendor/` -- git subtrees (see Subtree Registry)
 - `docs/` -- Implementation packets and documentation
 
 ## Key Architecture
 
-- `FeatureType`: ESSENTIAL, CONTEXTUAL, LOCATIONAL, FUNCTIONAL, SOCIAL
+- `FeatureType`: ESSENTIAL, CONTEXTUAL, LOCATIONAL, FUNCTIONAL, SOCIAL, STRUCTURAL(has-a)
 - `ISA_ALLOWED_TYPES = {FeatureType.ESSENTIAL}` -- only ESSENTIAL creates DAG edges
+- `DAGReasoner.composition_view()` -- separate has-a graph (STRUCTURAL edges + UFO shareable detection)
+- `relation_hint` (LLM output) -- UFO vocabulary corrected via `cg_partwhole.hint_to_feature_type()`
 - `SemanticTypeInference` -- Korean-language keyword heuristic for feature type classification
 - `build_expansion_prompt()` -- LLM prompt generator for concept expansion
 - `parse_expansion_response()` -- LLM response parser

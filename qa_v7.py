@@ -515,6 +515,23 @@ _rels = _pw.load_obo_partwhole()
 R.check("I5 obo part_of/has_part 로드",
         "BFO:0000050" in _rels and "BFO:0000051" in _rels and _rels["BFO:0000050"]["transitive"])
 
+# I6. composition_view: STRUCTURAL만 구성 그래프에, DAG(is-a)와 분리
+ST = cg.FeatureType.STRUCTURAL
+_cs = [
+    NC("자동차", [feat("탈것", "이동수단"), NF("엔진", ST, "엔진을 가진다", "엔진을 가진다")]),
+    NC("보트",   [feat("탈것", "이동수단"), NF("엔진", ST, "엔진을 가진다", "엔진을 가진다")]),
+]
+_dr = cg.DAGReasoner(_cs)
+_out = _dr.finalize()
+comp = _out["composition"]
+R.check("I6 composition edges에 STRUCTURAL만",
+        ("자동차", "엔진") in comp["edges"] and ("보트", "엔진") in comp["edges"]
+        and all(p != "탈것" for _, p in comp["edges"]))
+
+# I7. shared_parts: 엔진이 자동차·보트 양쪽에 → UFO shareable 감지
+R.check("I7 shared_parts 엔진 공유 감지",
+        comp["shared_parts"].get("엔진") == ["보트", "자동차"])
+
 # ─────────────────────────────────────────────
 # 요약
 # ─────────────────────────────────────────────
