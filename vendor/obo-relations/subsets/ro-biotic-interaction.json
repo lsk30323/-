@@ -1,0 +1,1515 @@
+{
+  "graphs" : [ {
+    "id" : "http://purl.obolibrary.org/obo/ro.owl",
+    "nodes" : [ {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002208",
+      "lbl" : "parasitoid of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "A parasite that kills or sterilizes its host"
+        }
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002209",
+      "lbl" : "has parasitoid",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "inverse of parasitoid of"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/RO_0002259" ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002227",
+      "lbl" : "obligate parasite of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "A sub-relation of parasite-of in which the parasite that cannot complete its life cycle without a host."
+        }
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002228",
+      "lbl" : "facultative parasite of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "A sub-relations of parasite-of in which the parasite that can complete its life cycle independent of a host."
+        }
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002235",
+      "lbl" : "stem parasite of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "A parasite-of relationship in which the host is a plant and the parasite that attaches to the host stem (PO:0009047)"
+        }
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002236",
+      "lbl" : "root parasite of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "A parasite-of relationship in which the host is a plant and the parasite that attaches to the host root (PO:0009005)"
+        }
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002237",
+      "lbl" : "hemiparasite of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "A sub-relation of parasite-of in which the parasite is a plant, and the parasite is parasitic under natural conditions and is also photosynthetic to some degree. Hemiparasites may just obtain water and mineral nutrients from the host plant. Many obtain at least part of their organic nutrients from the host as well."
+        }
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002437",
+      "lbl" : "biotically interacts with",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "An interaction relationship in which at least one of the partners is an organism and the other is either an organism or an abiotic entity with which the organism interacts."
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000118",
+          "val" : "interacts with on organism level"
+        }, {
+          "pred" : "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+          "val" : "http://dx.doi.org/10.1016/j.ecoinf.2014.08.005"
+        }, {
+          "pred" : "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+          "val" : "http://eol.org/schema/terms/interactsWith"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002438",
+      "lbl" : "trophically interacts with",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "An interaction relationship in which the partners are related via a feeding relationship."
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000112",
+          "val" : "lions trophically interact with the zebras that they eat"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+          "val" : "http://dx.doi.org/10.1016/j.ecoinf.2014.08.005"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002439",
+      "lbl" : "preys on",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "An interaction relationship involving a predation process, where the subject kills the target in order to eat it or to feed to siblings, offspring or group members"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000112",
+          "val" : "A wasp killing a Monarch larva in order to feed to offspring [http://www.inaturalist.org/observations/2942824]"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000112",
+          "val" : "Baleen whale preys on krill"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0001-7134-3324"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0003-3138-4118"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000118",
+          "val" : "is subject of predation interaction with"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000118",
+          "val" : "preys upon"
+        }, {
+          "pred" : "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+          "val" : "http://eol.org/schema/terms/preysUpon"
+        }, {
+          "pred" : "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+          "val" : "http://www.inaturalist.org/observations/2942824"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002440",
+      "lbl" : "symbiotically interacts with",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "A biotic interaction in which the two organisms live together in more or less intimate association."
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000112",
+          "val" : "whales symbiotically interact with the barnacles that attach to them"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "http://www.ncbi.nlm.nih.gov/pubmed/19278549"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000232",
+          "val" : "We follow GO and PAMGO in using 'symbiosis' as the broad term encompassing mutualism through parasitism"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002441",
+      "lbl" : "commensually interacts with",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "An interaction relationship between two organisms living together in more or less intimate association in a relationship in which one benefits and the other is unaffected (GO)."
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "http://www.ncbi.nlm.nih.gov/pubmed/19278549"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002442",
+      "lbl" : "mutualistically interacts with",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "An interaction relationship between two organisms living together in more or less intimate association in a relationship in which both organisms benefit from each other (GO)."
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "http://www.ncbi.nlm.nih.gov/pubmed/19278549"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002443",
+      "lbl" : "interacts with via parasite-host interaction",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "An interaction relationship between two organisms living together in more or less intimate association in a relationship in which association is disadvantageous or destructive to one of the organisms (GO)."
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "http://www.ncbi.nlm.nih.gov/pubmed/19278549"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000232",
+          "val" : "This relation groups a pair of inverse relations, parasite of and parasitized by"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002444",
+      "lbl" : "parasite of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "A parasite-host relationship where an organism benefits at the expense of another."
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "synonyms" : [ {
+          "pred" : "hasExactSynonym",
+          "val" : "direct parasite of"
+        } ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000112",
+          "val" : "Pediculus humanus capitis parasite of human"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000118",
+          "val" : "parasitizes"
+        }, {
+          "pred" : "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+          "val" : "http://eol.org/schema/terms/parasitizes"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002445",
+      "lbl" : "parasitized by",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "Inverse of parasite of"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "synonyms" : [ {
+          "pred" : "hasExactSynonym",
+          "val" : "directly parasitized by"
+        } ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000118",
+          "val" : "has parasite"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000118",
+          "val" : "parasitised by"
+        }, {
+          "pred" : "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+          "val" : "http://eol.org/schema/terms/hasParasite"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002446",
+      "lbl" : "participates in a abiotic-biotic interaction with",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "A biotic interaction relationship in which one partner is an organism and the other partner is inorganic. For example, the relationship between a sponge and the substrate to which is it anchored."
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "synonyms" : [ {
+          "pred" : "hasRelatedSynonym",
+          "val" : "semibiotically interacts with"
+        } ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000112",
+          "val" : "Porifiera attaches to substrate"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+          "val" : "http://dx.doi.org/10.1016/j.ecoinf.2014.08.005"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002453",
+      "lbl" : "host of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000232",
+          "val" : "The term host is usually used for the larger (macro) of the two members of a symbiosis (GO)"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002454",
+      "lbl" : "has host",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "X 'has host' y if and only if: x is an organism, y is an organism, and x can live on the surface of or within the body of y"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+          "val" : "http://eol.org/schema/terms/hasHost"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002455",
+      "lbl" : "pollinates",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000112",
+          "val" : "Bees pollinate Flowers"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000116",
+          "val" : "This relation is intended to be used for biotic pollination - e.g. a bee pollinating a flowering plant. Some kinds of pollination may be semibiotic - e.g. wind can have the role of pollinator. We would use a separate relation for this."
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000118",
+          "val" : "is subject of pollination interaction with"
+        }, {
+          "pred" : "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+          "val" : "http://eol.org/schema/terms/pollinates"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002456",
+      "lbl" : "pollinated by",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000118",
+          "val" : "has polinator"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000118",
+          "val" : "is target of pollination interaction with"
+        }, {
+          "pred" : "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+          "val" : "http://eol.org/schema/terms/hasPollinator"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002457",
+      "lbl" : "acquires nutrients from",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "Inverse of provides nutrients for"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000232",
+          "val" : "Intended to be used when the target of the relation is not itself consumed, and does not have integral parts consumed, but provided nutrients in some other fashion."
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002458",
+      "lbl" : "preyed upon by",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "inverse of preys on"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/RO_0002259", "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000118",
+          "val" : "has predator"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000118",
+          "val" : "is target of predation interaction with"
+        }, {
+          "pred" : "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+          "val" : "http://eol.org/schema/terms/HasPredator"
+        }, {
+          "pred" : "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+          "val" : "http://polytraits.lifewatchgreece.eu/terms/PRED"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002459",
+      "lbl" : "is vector for",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000112",
+          "val" : "Anopheles is a vector for Plasmodium"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "a is a vector for b if a carries and transmits an infectious pathogen b into another living organism"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002460",
+      "lbl" : "has vector",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002469",
+      "lbl" : "provides nutrients for",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "A biotic interaction where a material entity provides nutrition for an organism."
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002470",
+      "lbl" : "eats",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "A biotic interaction where one organism consumes a material entity through a type of mouth or other oral opening."
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000118",
+          "val" : "is subject of eating interaction with"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002471",
+      "lbl" : "is eaten by",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "Inverse of eats"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000118",
+          "val" : "eaten by"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000118",
+          "val" : "is target of eating interaction with"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002553",
+      "lbl" : "hyperparasite of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "x is a hyperparasite of y iff x is a parasite of a parasite of the target organism y"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "synonyms" : [ {
+          "pred" : "hasNarrowSynonym",
+          "val" : "hyperparasitoid of"
+        }, {
+          "pred" : "hasRelatedSynonym",
+          "val" : "epiparasite of"
+        } ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000116",
+          "val" : "Note that parasite-of is a diret relationship, so hyperparasite-of is not considered a sub-relation, even though hyperparasitism can be considered a form of parasitism"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "http://eol.org/schema/terms/hyperparasitoidOf"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "https://en.wikipedia.org/wiki/Hyperparasite"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002554",
+      "lbl" : "hyperparasitized by",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "inverse of hyperparasite of"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/RO_0002259", "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "synonyms" : [ {
+          "pred" : "hasRelatedSynonym",
+          "val" : "has epiparasite"
+        }, {
+          "pred" : "hasRelatedSynonym",
+          "val" : "has hyperparasite"
+        }, {
+          "pred" : "hasRelatedSynonym",
+          "val" : "hyperparasitoidized by"
+        } ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002555",
+      "lbl" : "allelopath of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "A relationship between organisms where one organism is influenced by the biochemicals produced by another."
+        },
+        "comments" : [ "Allelopathy is a phenomenon in which one organism releases chemicals to positively or negatively influence the growth, survival or reproduction of other organisms in its vicinity." ],
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "http://en.wikipedia.org/wiki/Allelopathy"
+        }, {
+          "pred" : "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+          "val" : "http://eol.org/schema/terms/allelopathyYes"
+        }, {
+          "pred" : "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+          "val" : "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10172429/"
+        }, {
+          "pred" : "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+          "val" : "x is an allelopath of y if x produces one or more biochemicals that influence the growth, survival, and reproduction of y"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002556",
+      "lbl" : "pathogen of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "Inverse of has pathogen"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002557",
+      "lbl" : "has pathogen",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "A host interaction where the smaller of the two members of a symbiosis causes a disease in the larger member"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002574",
+      "lbl" : "participates in a biotic-biotic interaction with",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0000-0002-6601-2165"
+        }, {
+          "pred" : "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+          "val" : "http://dx.doi.org/10.1016/j.ecoinf.2014.08.005"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002618",
+      "lbl" : "visits",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "basicPropertyValues" : [ {
+          "pred" : "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+          "val" : "https://github.com/oborel/obo-relations/issues/74"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002619",
+      "lbl" : "visited by",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT"
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002622",
+      "lbl" : "visits flowers of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT"
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002623",
+      "lbl" : "has flowers visited by",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT"
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002624",
+      "lbl" : "lays eggs in",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT"
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002625",
+      "lbl" : "has eggs laid in by",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT"
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002626",
+      "lbl" : "kills",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "https://github.com/jhpoelen/eol-globi-data/issues/143"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002627",
+      "lbl" : "is killed by",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT"
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002632",
+      "lbl" : "ectoparasite of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "A sub-relation of parasite-of in which the parasite lives on or in the integumental system of the host"
+        },
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "https://en.wikipedia.org/wiki/Parasitism#Types"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002633",
+      "lbl" : "has ectoparasite",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "inverse of ectoparasite of"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/RO_0002259" ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002634",
+      "lbl" : "endoparasite of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "synonyms" : [ {
+          "pred" : "hasRelatedSynonym",
+          "val" : "lives inside of"
+        } ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "https://en.wikipedia.org/wiki/Parasitism#Types"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "A sub-relation of parasite-of in which the parasite lives inside the host, beneath the integumental system"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002635",
+      "lbl" : "has endoparasite",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT"
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002636",
+      "lbl" : "mesoparasite of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "A sub-relation of parasite-of in which the parasite is partially an endoparasite and partially an ectoparasite"
+        }
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002637",
+      "lbl" : "has mesoparasite",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "inverse of mesoparasite of"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/RO_0002259" ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002638",
+      "lbl" : "intercellular endoparasite of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "A sub-relation of endoparasite-of in which the parasite inhabits the spaces between host cells."
+        },
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "https://en.wikipedia.org/wiki/Parasitism#Types"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002639",
+      "lbl" : "has intercellular endoparasite",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "inverse of intercellular endoparasite of"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/RO_0002259" ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002640",
+      "lbl" : "intracellular endoparasite of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "A sub-relation of endoparasite-of in which the parasite inhabits host cells."
+        },
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "https://en.wikipedia.org/wiki/Parasitism#Types"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002641",
+      "lbl" : "has intracellular endoparasite",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "inverse of intracellular endoparasite of"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/RO_0002259" ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002802",
+      "lbl" : "reservoir host of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "A relation between a host organism and a hosted organism in which the hosted organism naturally occurs in an indefinitely maintained reservoir provided by the host."
+        },
+        "comments" : [ "A reservoir is a population, species or community (assemblage of different species in a given geographic area) in which a microorganism naturally occurs and is indefinitely maintained. Some zoonotic pathogens, particularly bacterial pathogens, may also have environmental reservoirs. Microorganisms with multiple reservoir species may be indefinitely maintained across the community of species even if they are not always present in each individual reservoir species. In the reservoir species or community, the microorganism may cause either asymptomatic infection or disease and this may vary among individuals. A pathogen may also be more genetically diverse in its reservoir host than in other taxa, in part because the pathogen is endemic to reservoir hosts." ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000112",
+          "val" : "An individual of species Camelus dromedarius (commonly known as dromedary camels) is a reservoir host of an individual of Middle East respiratory syndrome–related coronavirus (MERS-CoV) since at least the 1980s."
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "https://doi.org/10.3390/v13071356"
+        }, {
+          "pred" : "http://purl.org/dc/terms/contributor",
+          "val" : "https://orcid.org/0000-0002-3120-4802"
+        }, {
+          "pred" : "http://purl.org/dc/terms/contributor",
+          "val" : "https://orcid.org/0000-0003-3138-4118"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002803",
+      "lbl" : "has reservoir host",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "inverse of reservoir host of"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/RO_0002259" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000112",
+          "val" : "An individual of Middle East respiratory syndrome–related coronavirus (MERS-CoV) has an individual of species Camelus dromedarius (commonly known as dromedary camels) as their reservoir host since at least the 1980s."
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002804",
+      "lbl" : "ectomycorrhizal host of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "x is an ectomycorrhizal host of y if and only if x is a plant (Plantae) whose roots form an intercellular interface (aka Hartig net) with fungus (Fungi) y. This interface consists of highly branched hyphae forming a latticework between epidermal and cortical root cells."
+        },
+        "comments" : [ "An ectomycorrhiza is a form of symbiotic relationship that occurs between a fungal symbiont, or mycobiont, and the roots of various plant species. The mycobiont is often from the phyla Basidiomycota and Ascomycota, and more rarely from the Zygomycota. Ectomycorrhizae form on the roots of around 2% of plant species, usually woody plants, including species from the birch, dipterocarp, myrtle, beech, willow, pine and rose families. Research on ectomycorrhizae is increasingly important in areas such as ecosystem management and restoration, forestry, and agriculture. Unlike other mycorrhizal relationships, such as arbuscular mycorrhiza and ericoid mycorrhiza, ectomycorrhizal fungi do not penetrate their host's cell wall. Instead they form an entirely intercellular interfaces known as the Hartig net, consisting of highly branched hyphae forming a latticework between epidermal and cortical root cells. " ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000112",
+          "val" : "According to Linde & Selmes 2012, an individual of species Quercus robur (French oak) is an ectomycorrhizal host of an individual of Tuber melanosporum (black truffle)."
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "https://doi.org/10.1128/AEM.01558-12"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "https://en.wikipedia.org/wiki/Ectomycorrhiza"
+        }, {
+          "pred" : "http://purl.org/dc/terms/contributor",
+          "val" : "https://orcid.org/0000-0003-3138-4118"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002805",
+      "lbl" : "has ectomycorrhizal host",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "inverse of ectomycorrhizal host of"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/RO_0002259" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000112",
+          "val" : "According to Linde & Selmes 2012, an individual of species Quercus robur (French oak) is an ectomycorrhizal host of an individual of Tuber melanosporum (black truffle)."
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002806",
+      "lbl" : "arbuscular mycorrhizal host of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "x is an arbuscular mycorrhizal host of y if and only if x is a vascular plant (Plantae) whose cortical cells of the roots are penetrated by fungus (Fungi) y and form arbuscules."
+        },
+        "comments" : [ "An arbuscular mycorrhiza (AM) (plural mycorrhizae) is a type of mycorrhiza in which the symbiont fungus (Arbuscular mycorrhizal fungi, or AMF) penetrates the cortical cells of the roots of a vascular plant forming arbuscules. Arbuscular mycorrhiza is a type of endomycorrhiza along with ericoid mycorrhiza and orchid mycorrhiza (not to be confused with ectomycorrhiza). They are characterized by the formation of unique tree-like structures, the arbuscules. In addition, globular storage structures called vesicles are often encountered. Arbuscular mycorrhizae are formed by fungi in the subphylum Glomeromycotina and some fungi from the Mucoromycotina. These subphyla, along with the Mortierellomycotina, form the phylum Mucoromycota, a sister clade of the more well-known and diverse dikaryan fungi. AM fungi help plants to capture nutrients such as phosphorus, sulfur, nitrogen and micronutrients from the soil. It is believed that the development of the arbuscular mycorrhizal symbiosis played a crucial role in the initial colonisation of land by plants and in the evolution of the vascular plants. It has been said that it is quicker to list the plants that do not form endomycorrhizae than those that do. This symbiosis is a highly evolved mutualistic relationship found between fungi and plants, the most prevalent plant symbiosis known, and AMF is found in 80% of vascular plant families in existence today." ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000112",
+          "val" : "According to Medina et al. 2003, an individual of a plant species Medicago sativa (commonly known as alfalfa or lucerne) is an arbuscular mycorrhizal host of an individual of a fungal species Funneliformis mosseae (formerly Glomus mosseae)."
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "https://doi.org/10.1016/S0929-1393(02)00112-9"
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "https://en.wikipedia.org/wiki/Arbuscular_mycorrhiza"
+        }, {
+          "pred" : "http://purl.org/dc/terms/contributor",
+          "val" : "https://orcid.org/0000-0003-3138-4118"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0002807",
+      "lbl" : "has arbuscular mycorrhizal host",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "inverse of arbuscular mycorrhizal host of"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/RO_0002259" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000112",
+          "val" : "According to Medina et al. 2003, an individual of a plant species Medicago sativa (commonly known as alfalfa or lucerne) is an arbuscular mycorrhizal host of an individual of a fungal species Funneliformis mosseae (formerly Glomus mosseae)."
+        }, {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "https://doi.org/10.1016/S0929-1393(02)00112-9"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0008501",
+      "lbl" : "epiphyte of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "An interaction relationship wherein a plant or algae is living on the outside surface of another plant."
+        },
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "https://en.wikipedia.org/wiki/Epiphyte"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0008502",
+      "lbl" : "has epiphyte",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "inverse of epiphyte of"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/RO_0002259" ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0008503",
+      "lbl" : "kleptoparasite of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "A sub-relation of parasite of in which a parasite steals resources from another organism, usually food or nest material"
+        },
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000119",
+          "val" : "https://en.wikipedia.org/wiki/Kleptoparasitism"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0008504",
+      "lbl" : "kleptoparasitized by",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "inverse of kleptoparasite of"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/RO_0002259" ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0008507",
+      "lbl" : "lays eggs on",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "An interaction relationship in which organism a lays eggs on the outside surface of organism b. Organism b is neither helped nor harmed in the process of egg laying or incubation."
+        }
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0008508",
+      "lbl" : "has eggs laid on by",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "inverse of lays eggs on"
+        }
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0008510",
+      "lbl" : "symbiotrophically interacts with",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "A trophic interaction in which one organism acquires nutrients through a symbiotic relationship with another organism"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000112",
+          "val" : "frog symbiotrophically interacts with the pitcher plant it lives inside of"
+        }, {
+          "pred" : "http://purl.org/dc/terms/contributor",
+          "val" : "https://orcid.org/0000-0002-2908-3327"
+        }, {
+          "pred" : "http://purl.org/dc/terms/date",
+          "val" : "2023-07-17T14:39:56Z"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0008511",
+      "lbl" : "trophic parasite of",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "A symbiotrophic interaction in which one organism acquires nutrients through a parasitic relationship with another organism"
+        },
+        "subsets" : [ "http://purl.obolibrary.org/obo/ro/subsets#ro-eco" ],
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000112",
+          "val" : "tapeworm is trophic parasite of the cow it lives inside of"
+        }, {
+          "pred" : "http://purl.org/dc/terms/contributor",
+          "val" : "https://orcid.org/0000-0002-2908-3327"
+        }, {
+          "pred" : "http://purl.org/dc/terms/date",
+          "val" : "2023-07-17T14:41:07Z"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/RO_0020301",
+      "lbl" : "has allelopath",
+      "type" : "PROPERTY",
+      "propertyType" : "OBJECT",
+      "meta" : {
+        "definition" : {
+          "val" : "inverse of allelopath of"
+        },
+        "basicPropertyValues" : [ {
+          "pred" : "http://purl.obolibrary.org/obo/IAO_0000117",
+          "val" : "https://orcid.org/0009-0005-5515-1230"
+        }, {
+          "pred" : "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+          "val" : "https://en.wikipedia.org/wiki/Allelopathy"
+        } ]
+      }
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/IAO_0000112",
+      "type" : "PROPERTY",
+      "propertyType" : "ANNOTATION"
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/IAO_0000115",
+      "type" : "PROPERTY",
+      "propertyType" : "ANNOTATION"
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/IAO_0000116",
+      "type" : "PROPERTY",
+      "propertyType" : "ANNOTATION"
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/IAO_0000117",
+      "type" : "PROPERTY",
+      "propertyType" : "ANNOTATION"
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/IAO_0000118",
+      "type" : "PROPERTY",
+      "propertyType" : "ANNOTATION"
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/IAO_0000119",
+      "type" : "PROPERTY",
+      "propertyType" : "ANNOTATION"
+    }, {
+      "id" : "http://purl.obolibrary.org/obo/IAO_0000232",
+      "type" : "PROPERTY",
+      "propertyType" : "ANNOTATION"
+    }, {
+      "id" : "http://purl.org/dc/terms/contributor",
+      "type" : "PROPERTY",
+      "propertyType" : "ANNOTATION"
+    }, {
+      "id" : "http://purl.org/dc/terms/date",
+      "type" : "PROPERTY",
+      "propertyType" : "ANNOTATION"
+    }, {
+      "id" : "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym",
+      "type" : "PROPERTY",
+      "propertyType" : "ANNOTATION"
+    }, {
+      "id" : "http://www.geneontology.org/formats/oboInOwl#hasNarrowSynonym",
+      "type" : "PROPERTY",
+      "propertyType" : "ANNOTATION"
+    }, {
+      "id" : "http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym",
+      "type" : "PROPERTY",
+      "propertyType" : "ANNOTATION"
+    }, {
+      "id" : "http://www.geneontology.org/formats/oboInOwl#inSubset",
+      "type" : "PROPERTY",
+      "propertyType" : "ANNOTATION"
+    } ],
+    "edges" : [ {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002208",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002444"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002209",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002445"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002227",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002444"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002228",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002444"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002235",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002444"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002236",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002444"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002237",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002444"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002438",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002574"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002439",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002438"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002440",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002574"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002441",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002440"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002442",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002440"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002443",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002440"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002444",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002443"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002444",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002454"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002445",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002443"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002445",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002453"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002446",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002437"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002453",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002440"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002454",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002440"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002455",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002442"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002456",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002442"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002457",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002437"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002458",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002438"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002459",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002574"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002460",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002574"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002469",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002437"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002470",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002437"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002471",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002437"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002553",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002454"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002554",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002453"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002555",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002574"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002556",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002454"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002557",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002453"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002574",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002437"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002618",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002574"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002619",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002574"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002622",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002618"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002623",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002619"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002624",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002444"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002624",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002618"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002625",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002445"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002625",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002619"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002626",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002574"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002627",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002574"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002632",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002444"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002633",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002445"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002634",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002444"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002635",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002445"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002636",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002444"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002637",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002445"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002638",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002634"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002639",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002635"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002640",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002634"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002641",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002635"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002802",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002453"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002803",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002454"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002804",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002453"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002805",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002454"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002806",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002453"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002807",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002454"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0008501",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002440"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0008502",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002440"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0008503",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002444"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0008504",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002445"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0008507",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002618"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0008508",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002619"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0008510",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002438"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0008511",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0008510"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0020301",
+      "pred" : "subPropertyOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002574"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002208",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002209"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002439",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002458"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002444",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002445"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002455",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002456"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002457",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002469"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002459",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002460"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002553",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002554"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002555",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0020301"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002556",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002557"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002618",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002619"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002622",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002623"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002624",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002625"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002626",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002627"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002632",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002633"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002634",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002635"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002636",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002637"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002638",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002639"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002640",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002641"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002802",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002803"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002804",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002805"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0002806",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0002807"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0008501",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0008502"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0008503",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0008504"
+    }, {
+      "sub" : "http://purl.obolibrary.org/obo/RO_0008507",
+      "pred" : "inverseOf",
+      "obj" : "http://purl.obolibrary.org/obo/RO_0008508"
+    } ],
+    "propertyChainAxioms" : [ {
+      "predicateId" : "http://purl.obolibrary.org/obo/RO_0002553",
+      "chainPredicateIds" : [ "http://purl.obolibrary.org/obo/RO_0002444", "http://purl.obolibrary.org/obo/RO_0002444" ]
+    }, {
+      "predicateId" : "http://purl.obolibrary.org/obo/RO_0002554",
+      "chainPredicateIds" : [ "http://purl.obolibrary.org/obo/RO_0002445", "http://purl.obolibrary.org/obo/RO_0002445" ]
+    } ]
+  } ]
+}

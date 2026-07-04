@@ -1,0 +1,90 @@
+Prefix(:=<http://purl.obolibrary.org/obo/ro/imports/cl_import.owl#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)
+Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+
+
+Ontology(<http://purl.obolibrary.org/obo/ro/imports/cl_import.owl>
+<http://purl.obolibrary.org/obo/ro/releases/2025-12-17/imports/cl_import.owl>
+Annotation(<http://purl.org/dc/elements/1.1/source> <http://purl.obolibrary.org/obo/cl/releases/2025-12-17/cl.owl>)
+Annotation(owl:versionInfo "2025-12-17")
+
+Declaration(Class(<http://purl.obolibrary.org/obo/CL_0000000>))
+Declaration(Class(<http://purl.obolibrary.org/obo/CL_0000101>))
+Declaration(Class(<http://purl.obolibrary.org/obo/CL_0000540>))
+Declaration(Class(<http://purl.obolibrary.org/obo/UBERON_0000061>))
+Declaration(ObjectProperty(<http://purl.obolibrary.org/obo/CL_4030045>))
+Declaration(ObjectProperty(<http://purl.obolibrary.org/obo/CL_4030046>))
+Declaration(ObjectProperty(<http://purl.obolibrary.org/obo/RO_0020104>))
+Declaration(AnnotationProperty(<http://purl.obolibrary.org/obo/IAO_0000115>))
+Declaration(AnnotationProperty(<http://purl.obolibrary.org/obo/IAO_0000424>))
+Declaration(AnnotationProperty(<http://purl.obolibrary.org/obo/RO_0002175>))
+Declaration(AnnotationProperty(<http://purl.org/dc/elements/1.1/source>))
+Declaration(AnnotationProperty(<http://www.geneontology.org/formats/oboInOwl#hasDbXref>))
+Declaration(AnnotationProperty(<http://www.geneontology.org/formats/oboInOwl#hasExactSynonym>))
+
+############################
+#   Object Properties
+############################
+
+# Object Property: <http://purl.obolibrary.org/obo/CL_4030045> (lacks_part)
+
+AnnotationAssertion(<http://purl.obolibrary.org/obo/IAO_0000424> <http://purl.obolibrary.org/obo/CL_4030045> "http://purl.obolibrary.org/obo/BFO_0000051 exactly 0 ?Y")
+AnnotationAssertion(rdfs:label <http://purl.obolibrary.org/obo/CL_4030045> "lacks_part")
+
+# Object Property: <http://purl.obolibrary.org/obo/CL_4030046> (lacks_plasma_membrane_part)
+
+AnnotationAssertion(<http://purl.obolibrary.org/obo/IAO_0000424> <http://purl.obolibrary.org/obo/CL_4030046> "http://purl.obolibrary.org/obo/BFO_0000051 exactly 0 (http://purl.obolibrary.org/obo/GO_0005886 and http://purl.obolibrary.org/obo/BFO_0000051 some ?Y)")
+AnnotationAssertion(rdfs:label <http://purl.obolibrary.org/obo/CL_4030046> "lacks_plasma_membrane_part")
+
+
+
+############################
+#   Classes
+############################
+
+# Class: <http://purl.obolibrary.org/obo/CL_0000000> (cell)
+
+AnnotationAssertion(Annotation(<http://www.geneontology.org/formats/oboInOwl#hasDbXref> "CARO:mah") <http://purl.obolibrary.org/obo/IAO_0000115> <http://purl.obolibrary.org/obo/CL_0000000> "A material entity of anatomical origin (part of or deriving from an organism) that has as its parts a maximally connected cell compartment surrounded by a plasma membrane.")
+AnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#hasDbXref> <http://purl.obolibrary.org/obo/CL_0000000> "CALOHA:TS-2035")
+AnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#hasDbXref> <http://purl.obolibrary.org/obo/CL_0000000> "FMA:68646")
+AnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#hasDbXref> <http://purl.obolibrary.org/obo/CL_0000000> "GO:0005623")
+AnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#hasDbXref> <http://purl.obolibrary.org/obo/CL_0000000> "KUPO:0000002")
+AnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#hasDbXref> <http://purl.obolibrary.org/obo/CL_0000000> "MESH:D002477")
+AnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#hasDbXref> <http://purl.obolibrary.org/obo/CL_0000000> "VHOG:0001533")
+AnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#hasDbXref> <http://purl.obolibrary.org/obo/CL_0000000> "WBbt:0004017")
+AnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#hasDbXref> <http://purl.obolibrary.org/obo/CL_0000000> "XAO:0003012")
+AnnotationAssertion(rdfs:comment <http://purl.obolibrary.org/obo/CL_0000000> "The definition of cell is intended to represent all cells, and thus a cell is defined as a material entity and not an anatomical structure, which implies that it is part of an organism (or the entirety of one).")
+AnnotationAssertion(rdfs:label <http://purl.obolibrary.org/obo/CL_0000000> "cell")
+SubClassOf(<http://purl.obolibrary.org/obo/CL_0000000> <http://purl.obolibrary.org/obo/UBERON_0000061>)
+
+# Class: <http://purl.obolibrary.org/obo/CL_0000101> (sensory neuron)
+
+AnnotationAssertion(Annotation(<http://www.geneontology.org/formats/oboInOwl#hasDbXref> "ISBN:0721662544") <http://purl.obolibrary.org/obo/IAO_0000115> <http://purl.obolibrary.org/obo/CL_0000101> "Any neuron having a sensory function; an afferent neuron conveying sensory impulses.")
+AnnotationAssertion(<http://purl.obolibrary.org/obo/RO_0002175> <http://purl.obolibrary.org/obo/CL_0000101> <http://purl.obolibrary.org/obo/NCBITaxon_9606>)
+AnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#hasDbXref> <http://purl.obolibrary.org/obo/CL_0000101> "BTO:0001037")
+AnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#hasDbXref> <http://purl.obolibrary.org/obo/CL_0000101> "FMA:84649")
+AnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#hasDbXref> <http://purl.obolibrary.org/obo/CL_0000101> "MESH:D011984")
+AnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#hasDbXref> <http://purl.obolibrary.org/obo/CL_0000101> "WBbt:0005759")
+AnnotationAssertion(rdfs:label <http://purl.obolibrary.org/obo/CL_0000101> "sensory neuron")
+SubClassOf(<http://purl.obolibrary.org/obo/CL_0000101> <http://purl.obolibrary.org/obo/CL_0000540>)
+
+# Class: <http://purl.obolibrary.org/obo/CL_0000540> (neuron)
+
+AnnotationAssertion(Annotation(<http://www.geneontology.org/formats/oboInOwl#hasDbXref> "MESH:D009474") Annotation(<http://www.geneontology.org/formats/oboInOwl#hasDbXref> "http://en.wikipedia.org/wiki/Neuron") <http://purl.obolibrary.org/obo/IAO_0000115> <http://purl.obolibrary.org/obo/CL_0000540> "The basic cellular unit of nervous tissue. Each neuron consists of a body, an axon, and dendrites. Their purpose is to receive, conduct, and transmit impulses in the nervous system.")
+AnnotationAssertion(<http://purl.obolibrary.org/obo/RO_0002175> <http://purl.obolibrary.org/obo/CL_0000540> <http://purl.obolibrary.org/obo/NCBITaxon_9606>)
+AnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#hasDbXref> <http://purl.obolibrary.org/obo/CL_0000540> "BTO:0000938")
+AnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#hasDbXref> <http://purl.obolibrary.org/obo/CL_0000540> "CALOHA:TS-0683")
+AnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#hasDbXref> <http://purl.obolibrary.org/obo/CL_0000540> "FMA:54527")
+AnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#hasDbXref> <http://purl.obolibrary.org/obo/CL_0000540> "VHOG:0001483")
+AnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#hasDbXref> <http://purl.obolibrary.org/obo/CL_0000540> "WBbt:0003679")
+AnnotationAssertion(<http://www.geneontology.org/formats/oboInOwl#hasExactSynonym> <http://purl.obolibrary.org/obo/CL_0000540> "nerve cell")
+AnnotationAssertion(rdfs:comment <http://purl.obolibrary.org/obo/CL_0000540> "These cells are also reportedly CD4-negative and CD200-positive. They are also capable of producing CD40L and IFN-gamma.")
+AnnotationAssertion(rdfs:label <http://purl.obolibrary.org/obo/CL_0000540> "neuron")
+EquivalentClasses(<http://purl.obolibrary.org/obo/CL_0000540> ObjectHasSelf(<http://purl.obolibrary.org/obo/RO_0020104>))
+SubClassOf(<http://purl.obolibrary.org/obo/CL_0000540> <http://purl.obolibrary.org/obo/CL_0000000>)
+
+
+)
