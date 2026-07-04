@@ -477,6 +477,44 @@ if _ge_avail:
     R.check("H4 summary: edge=4, meet=1, max_level=2",
             gs["edge_count"] == 4 and gs["meet_count"] == 1 and gs["max_level"] == 2)
 
+# ═════════════════════════════════════════════
+# PART I. v7 Phase B — has-a/STRUCTURAL + relation_hint (obo-relations 조립)
+# ═════════════════════════════════════════════
+print("\n[PART I] Phase B: STRUCTURAL + relation_hint")
+
+# I1. STRUCTURAL은 비-essential (DAG 간선 미형성)
+R.check("I1 STRUCTURAL 비-essential",
+        cg.FeatureType.STRUCTURAL not in cg.ISA_ALLOWED_TYPES)
+
+# I2. relation_hint=component_of → essential을 STRUCTURAL로 교정
+import json as _json
+raw = _json.dumps({"expansions": [{"concept": "자동차", "new_features": [
+    {"feature": "엔진", "type": "essential_feature",
+     "evidence": "자동차는 엔진을 가진다", "relation_hint": "component_of"},
+]}]}, ensure_ascii=False)
+cs, _ = cg.parse_expansion_response(raw, [NC("자동차", [])])
+eng = next(f for f in cs[0].features if f.feature == "엔진")
+R.check("I2 component_of → STRUCTURAL 강등", eng.type == cg.FeatureType.STRUCTURAL)
+
+# I3. relation_hint=is_a → essential 유지
+raw2 = _json.dumps({"expansions": [{"concept": "고양이", "new_features": [
+    {"feature": "포유류", "type": "essential_feature",
+     "evidence": "분류학상 포유강", "relation_hint": "is_a"},
+]}]}, ensure_ascii=False)
+cs2, _ = cg.parse_expansion_response(raw2, [NC("고양이", [])])
+mam = next(f for f in cs2[0].features if f.feature == "포유류")
+R.check("I3 is_a → ESSENTIAL 유지", mam.type == cg.FeatureType.ESSENTIAL)
+
+# I4. SemanticTypeInference 구조 마커
+r_struct = cg.SemanticTypeInference.infer("구성요소", "", "")
+R.check("I4 구성요소 → STRUCTURAL", r_struct.inferred_type == cg.FeatureType.STRUCTURAL)
+
+# I5. obo-relations subtree 조립 (core.obo 로드, fallback 아님)
+import cg_partwhole as _pw
+_rels = _pw.load_obo_partwhole()
+R.check("I5 obo part_of/has_part 로드",
+        "BFO:0000050" in _rels and "BFO:0000051" in _rels and _rels["BFO:0000050"]["transitive"])
+
 # ─────────────────────────────────────────────
 # 요약
 # ─────────────────────────────────────────────

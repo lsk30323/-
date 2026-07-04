@@ -42,12 +42,15 @@ LLM 연결 방법:
 """
 
 from __future__ import annotations
-import heapq, json, math, re
+import heapq, json, math, re, os, sys
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Set, Tuple
 from itertools import combinations
 from dataclasses import dataclass, field
 from enum import Enum
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from cg_partwhole import hint_to_feature_type  # noqa: E402  (obo-relations subtree 조립)
 
 
 # ═══════════════════════════════════════════════════════
@@ -74,6 +77,7 @@ class FeatureType(Enum):
     LOCATIONAL = "locational"
     FUNCTIONAL = "functional"
     SOCIAL     = "social_treatment"
+    STRUCTURAL = "structural_composition"  # has-a/part-whole (Phase B, 비-essential)
 
 ISA_ALLOWED_TYPES: Set[FeatureType] = {FeatureType.ESSENTIAL}
 
@@ -175,10 +179,17 @@ class SemanticTypeInference:
         (frozenset({"용도", "사용"}), FeatureType.FUNCTIONAL),
         (frozenset({"서식", "환경"}), FeatureType.LOCATIONAL),
         (frozenset({"서식", "장소"}), FeatureType.LOCATIONAL),
+        # Phase B: has-a/part-whole 구조 마커 (obo-relations part_of/member_of 계열)
+        (frozenset({"구성", "부품"}), FeatureType.STRUCTURAL),
+        (frozenset({"구성", "요소"}), FeatureType.STRUCTURAL),
+        (frozenset({"부분", "전체"}), FeatureType.STRUCTURAL),
     ]
     SINGLE_STRONG = {
         "서식지": FeatureType.LOCATIONAL, "수중생활": FeatureType.LOCATIONAL,
         "해양생활": FeatureType.LOCATIONAL, "착용용도": FeatureType.FUNCTIONAL,
+        # Phase B: 단일 구조 마커
+        "구성요소": FeatureType.STRUCTURAL, "부품": FeatureType.STRUCTURAL,
+        "구성부품": FeatureType.STRUCTURAL,
     }
     ESSENTIAL_EXCEPTIONS = {
         "분류학", "생물학적 분류", "계통분류", "계통적 분류", "형태학적", "해부학적",
@@ -1046,6 +1057,13 @@ def parse_expansion_response(raw: str, original_concepts: List[NormalizedConcept
             if ftype is None:
                 errors.append(GateResult("Expansion Parse", False,
                     f'"{cname}"."{fname}": unknown type "{ftype_str}"', severity=GateSeverity.ERROR)); continue
+            # Phase B: relation_hint(UFO 어휘, obo-relations 기반)로 잘못된 essential 교정.
+            # LLM이 has-a를 essential로 표기한 경우만 비-essential로 강등 (deterministic).
+            hint_type_str = hint_to_feature_type(rf.get("relation_hint"))
+            if hint_type_str and ftype == FeatureType.ESSENTIAL:
+                hinted = next((ft for ft in FeatureType if ft.value == hint_type_str), None)
+                if hinted is not None and hinted != FeatureType.ESSENTIAL:
+                    ftype = hinted
             ev = rf.get("evidence", "")
             if not isinstance(ev, str):
                 ev = str(ev)
