@@ -19,6 +19,7 @@ client → run_pipeline → WARNING + expansion_actions
 conceptgate-mcp/
 ├── server.py              MCP 서버 (FastMCP)
 ├── concept_gate_v7.py     ConceptGate 코어 (수정 없음, import만)
+├── cg_partwhole.py        part-whole 어휘 어댑터 (참조용 배포 복사본)
 ├── cg_graph_export.py     GraphExporter (수정 없음, import만)
 ├── test_server.py         단위 테스트 (직접 호출 19 + MCP 프로토콜 11)
 ├── pyproject.toml
@@ -36,6 +37,7 @@ conceptgate-mcp/
 conceptgate-mcp/
 ├── server.py              ← 반드시 concept_gate_v7.py와 같은 디렉토리
 ├── concept_gate_v7.py
+├── cg_partwhole.py
 ├── cg_graph_export.py
 ├── test_server.py
 ├── pyproject.toml
@@ -102,9 +104,34 @@ in-memory로 실제 MCP 프로토콜(tools/resources/prompts)을 검증한다.
 }
 ```
 
-type은 essential_feature / contextual_usage / locational / functional / social_treatment
-중 하나. evidence는 최소 4자. 입력은 반드시 ParseGate를 경유하므로 잘못된
-형식은 `{"status": "FAIL", "errors": [...]}`로 거부된다.
+type은 essential_feature / structural_composition / contextual_usage /
+locational / functional / social_treatment 중 하나. evidence는 최소 4자.
+입력은 반드시 ParseGate를 경유하므로 잘못된 형식은
+`{"status": "FAIL", "errors": [...]}`로 거부된다.
+
+### is-a vs has-a
+
+- `essential_feature` → is-a DAG 간선 (분류 계층). `dag`/`definitions`로 반환.
+- `structural_composition` → has-a 구성 그래프 (부분-전체). `composition` 필드로
+  별도 반환: `{"edges": [[전체, 부분], ...], "shared_parts": {부분: [전체들]}}`.
+
+선택 필드 `relation_hint`(UFO 어휘)로 관계 맥락을 명시할 수 있다:
+is_a, component_of, member_of, subcollection_of, subquantity_of,
+material_of, phase_of, located_in.
+
+```json
+{"feature": "엔진", "type": "structural_composition",
+ "evidence": "자동차는 엔진을 동력원으로 가진다", "relation_hint": "component_of"}
+```
+
+### 검증 출력 (Phase C)
+
+- `composition_issues` — mereology 공리 위반: 반대칭(antisymmetry),
+  순환(cycle), is-a/has-a 혼동(isa_hasa_conflict), 자기부분(self_part)
+- `anti_patterns` — UFO 안티패턴 (WARNING, 차단 안 함):
+  - **MixRig**: 같은 feature가 essential과 비-essential로 혼용
+  - **PartOver**: is-a 조상-자손이 같은 부분을 중복 선언
+  - **WholeOver**: 한 개념이 부분과 그 특수화를 동시 보유
 
 ## 연결
 
