@@ -695,6 +695,105 @@ R.check("K4 rca_scaling 배선: 기본 False 무변경 + True면 탈것→자동
         f"off_defs={out_k_off['result']['definitions']}, on_car={d_k}")
 
 
+# ═════════════════════════════════════════════
+# PART L. 구성(composition) vs 구조(structure) 혼동 시나리오
+# ═════════════════════════════════════════════
+# 실 도메인(Transformer/Attention)에서 흔히 일어나는 모델링 오류 4가지.
+# "어텐션에 정형화된 구조가 있다고 착각" — 메커니즘을 부품으로 취급하는 실수.
+print("\n[PART L] 구성 vs 구조 혼동 시나리오 (Transformer/Attention)")
+
+# L1. MixRig — 메커니즘을 구성요소로 착각
+# "어텐션"이 한 곳에서는 essential(분류 기준), 다른 곳에서는 structural(부품) → rigidity 혼합.
+# 실수: 어텐션은 메커니즘(계산 방법)이지 분리 가능한 부품이 아닌데, 한쪽에서 has-a로 분류.
+_l1 = [
+    NC("신경망",     [feat("어텐션", "어텐션 메커니즘을 사용하는 모델"), feat("학습", "역전파 학습")]),
+    NC("트랜스포머", [feat("학습", "역전파 학습"),
+                      NF("어텐션", ST, "어텐션을 핵심 구성요소로 가진다", "어텐션을 핵심 구성요소로 가진다")]),
+]
+_l1_dr = cg.DAGReasoner(_l1)
+_l1_rep, _l1_iss = cg.UFOAntiPatternGate.detect(_l1_dr, _l1)
+_l1_mr = [i for i in _l1_iss if i["pattern"] == "MixRig"]
+R.check("L1 MixRig: 어텐션이 E(신경망)과 S(트랜스포머)로 혼용 → WARNING",
+        len(_l1_mr) == 1 and _l1_mr[0]["subject"] == "어텐션"
+        and sorted(_l1_mr[0]["involved"]) == ["신경망", "트랜스포머"],
+        f"got {_l1_iss}")
+
+# L2. WholeOver — 개념 패밀리를 단일 부품으로 + 그 특수화도 부품으로
+# "트랜스포머 has 어텐션" + "트랜스포머 has 셀프어텐션"인데
+# 어텐션 is-a 셀프어텐션(또는 반대) → 부분과 그 특수화 동시 보유.
+# 실수: "어텐션"이 정형화된 단일 구조라고 착각하면서, 그 변형도 따로 달아놓음.
+_l2 = [
+    NC("어텐션",     [feat("가중합", "입력의 가중 합산")]),
+    NC("셀프어텐션", [feat("가중합", "입력의 가중 합산"), feat("자기참조", "Q=K=V 동일 시퀀스")]),
+    NC("트랜스포머", [feat("시퀀스모델", "시퀀스 변환 모델"),
+                      NF("어텐션", ST, "어텐션을 가진다", "어텐션을 가진다"),
+                      NF("셀프어텐션", ST, "셀프어텐션을 가진다", "셀프어텐션을 가진다")]),
+]
+_l2_dr = cg.DAGReasoner(_l2)
+_l2_dr.add_edge("어텐션", "셀프어텐션")
+_l2_rep, _l2_iss = cg.UFOAntiPatternGate.detect(_l2_dr, _l2)
+_l2_wo = [i for i in _l2_iss if i["pattern"] == "WholeOver"]
+R.check("L2 WholeOver: 트랜스포머가 어텐션과 셀프어텐션(특수화) 동시 보유 → WARNING",
+        len(_l2_wo) == 1 and _l2_wo[0]["subject"] == "트랜스포머"
+        and sorted(_l2_wo[0]["involved"]) == ["셀프어텐션", "어텐션"],
+        f"got {_l2_iss}")
+
+# L3. PartOver — 상속 부분 중복 선언
+# "트랜스포머 has 어텐션" + "인코더(is-a 트랜스포머) has 어텐션"
+# → 자식이 부모에게서 상속받을 부분을 중복 선언.
+# 실수: 인코더가 트랜스포머의 일종이면, 어텐션은 자동으로 상속됨 — 중복은 모델 오류.
+_l3 = [
+    NC("트랜스포머", [feat("시퀀스모델", "시퀀스 변환 모델"),
+                      NF("어텐션", ST, "어텐션을 가진다", "어텐션을 가진다")]),
+    NC("인코더",     [feat("시퀀스모델", "시퀀스 변환 모델"), feat("양방향", "양방향 문맥 참조"),
+                      NF("어텐션", ST, "어텐션을 가진다", "어텐션을 가진다")]),
+]
+_l3_dr = cg.DAGReasoner(_l3)
+_l3_dr.add_edge("트랜스포머", "인코더")
+_l3_rep, _l3_iss = cg.UFOAntiPatternGate.detect(_l3_dr, _l3)
+_l3_po = [i for i in _l3_iss if i["pattern"] == "PartOver"]
+R.check("L3 PartOver: 어텐션이 트랜스포머·인코더(조상-자손)에 중복 → WARNING",
+        len(_l3_po) == 1 and _l3_po[0]["subject"] == "어텐션"
+        and sorted(_l3_po[0]["involved"]) == ["인코더", "트랜스포머"],
+        f"got {_l3_iss}")
+
+# L4. is-a/has-a 배타 — is-a 관계인 개념을 has-a로도 선언
+# "트랜스포머 is-a 시퀀스모델"인데 "트랜스포머 has 시퀀스모델" (S)로도 선언.
+# 실수: "트랜스포머는 시퀀스모델의 일종"이면서 동시에 "시퀀스모델을 부품으로 가진다"는 모순.
+_l4 = [
+    NC("시퀀스모델", [feat("시퀀스처리", "시퀀스 입력을 처리")]),
+    NC("트랜스포머", [feat("시퀀스처리", "시퀀스 입력을 처리"), feat("병렬화", "어텐션으로 병렬 처리"),
+                      NF("시퀀스모델", ST, "시퀀스모델을 구조로 가진다", "시퀀스모델을 구조로 가진다")]),
+]
+_l4_dr = cg.DAGReasoner(_l4)
+_l4_dr.add_edge("시퀀스모델", "트랜스포머")
+_l4_rep, _l4_iss = cg.CompositionGate.detect(_l4_dr)
+_l4_conf = [i for i in _l4_iss if i["kind"] == "isa_hasa_conflict"]
+R.check("L4 is-a/has-a 배타: 트랜스포머 is-a 시퀀스모델인데 has-a로도 선언 → NEEDS_CORRECTION",
+        len(_l4_conf) == 1 and _l4_conf[0]["whole"] == "트랜스포머"
+        and _l4_conf[0]["part"] == "시퀀스모델",
+        f"got {_l4_iss}")
+
+# L5. 복합 시나리오 — end-to-end pipeline 통과
+# 올바른 모델링: 메커니즘은 functional, 실제 모듈은 structural, 분류는 essential.
+# 게이트 위반 없이 is-a DAG + composition 그래프 모두 정상 생성되어야 한다.
+_l5 = [
+    NC("시퀀스모델", [feat("시퀀스처리", "시퀀스 입력을 처리")]),
+    NC("트랜스포머", [feat("시퀀스처리", "시퀀스 입력을 처리"), feat("병렬화", "어텐션으로 병렬 처리"),
+                      NF("인코더블록", ST, "인코더 블록을 쌓아 구성", "인코더 블록을 쌓아 구성"),
+                      NF("디코더블록", ST, "디코더 블록을 쌓아 구성", "디코더 블록을 쌓아 구성")]),
+]
+_l5_out = cg.ConceptPipeline().run([_l5])
+_l5_comp = _l5_out["result"].get("composition", {})
+R.check("L5 올바른 모델링: PASS + 트랜스포머 is-a 시퀀스모델 + composition에 인코더/디코더블록",
+        _l5_out["status"] in ("PASS", "PASS_WITH_REPAIR")
+        and "시퀀스모델" in dict(_l5_out["result"]["dag"])
+        and ("트랜스포머", "인코더블록") in _l5_comp.get("edges", [])
+        and ("트랜스포머", "디코더블록") in _l5_comp.get("edges", [])
+        and _l5_out.get("composition_issues", []) == []
+        and _l5_out.get("anti_patterns", []) == [],
+        f"status={_l5_out['status']}, dag={dict(_l5_out['result']['dag'])}, comp={_l5_comp}")
+
 # ─────────────────────────────────────────────
 # 요약
 # ─────────────────────────────────────────────

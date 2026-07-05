@@ -60,7 +60,7 @@ Subtree 갱신: `git subtree pull --prefix vendor/obo-relations https://github.c
 - `cg_partwhole.py` -- Part-whole adapter assembling vocabulary from vendor/obo-relations subtree
 - `files/server.py` -- MCP server (FastMCP adapter)
 - `files/concept_gate_v7.py`, `files/cg_partwhole.py` -- Deployment copies (keep in sync with root)
-- `qa_v7.py` -- QA test suite (84 tests)
+- `qa_v7.py` -- QA test suite (89 tests)
 - `vendor/` -- git subtrees (see Subtree Registry)
 - `docs/` -- Implementation packets and documentation
 
