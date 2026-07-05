@@ -52,7 +52,12 @@ When writing code, prefer bringing in existing code as **git subtrees** and asse
 |--------|--------|--------|---------|
 | `vendor/obo-relations` | oborel/obo-relations | master | part_of (BFO:0000050) / has_part (BFO:0000051) 표준 공리. Phase B `relation_hint` 검증. 핵심 파일: `core.obo` |
 
+Subtree 최초 추가 (vendor/가 없는 repo): `git subtree add --prefix vendor/obo-relations https://github.com/oborel/obo-relations.git master --squash`
 Subtree 갱신: `git subtree pull --prefix vendor/obo-relations https://github.com/oborel/obo-relations.git master --squash`
+
+주의: vendor/가 없어도 코드는 동작한다 — `cg_partwhole.load_obo_partwhole()`이
+내장 fallback(BFO:0000050/51 등)으로 graceful degradation하며 전체 테스트도 통과.
+subtree는 공리의 원전 참조용이므로 나중에 추가해도 무방.
 
 ## Project Structure
 
@@ -78,5 +83,7 @@ Subtree 갱신: `git subtree pull --prefix vendor/obo-relations https://github.c
 ## Git
 
 - Do NOT commit without explicit permission
-- Branch: `claude/enable-remote-control-Lh6Di` (current working branch)
-- Target repo: `goodand/concept-gate-taxonomy` (will be registered separately)
+- Canonical repo: `goodand/concept-gate-taxonomy`
+- (개발 이력 참고: 초기 개발은 lsk30323 임시 repo의
+  `claude/enable-remote-control-Lh6Di` 브랜치에서 진행 후 이전됨.
+  goodand repo에서는 해당 브랜치명이 존재하지 않음 — 정상.)

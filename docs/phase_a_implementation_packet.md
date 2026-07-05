@@ -14,7 +14,7 @@ Add UFO-based is-a vs has-a discrimination guidance to `build_expansion_prompt()
 - `FeatureType.STRUCTURAL` 추가됨 (Phase B). `ISA_ALLOWED_TYPES`는 ESSENTIAL만 유지.
 - `parse_expansion_response()`의 hint→type 교정 로직은 삭제됨 (Phase A/B 모순 해소).
   LLM이 `structural_composition`을 직접 출력하므로 교정이 불필요.
-- All existing tests (60 inline + 84 QA + 30 server) must pass
+- All existing tests (60 inline + 89 QA + 30 server) must pass
 - Korean language for all prompt text
 
 ## Files to Modify
@@ -328,7 +328,7 @@ cp /home/user/-/concept_gate_v7.py /home/user/-/files/concept_gate_v7.py
 1. Run inline tests: `cd /home/user/- && python3 concept_gate_v7.py`
    - Expect: all 60 tests pass
 2. Run QA suite: `cd /home/user/- && python3 qa_v7.py`
-   - Expect: all 84 tests pass (Phase B/C에서 PART I/J/K 추가)
+   - Expect: all 89 tests pass (Phase B/C에서 PART I/J/K, 혼동 시나리오 PART L 추가)
 3. Manual verification:
    - `build_expansion_prompt()` with DEPTH action should contain `<discrimination_guide>`, `<is_a_vs_has_a_test>`, `<ufo_type_mapping>`, `<part_whole_patterns>`
    - `build_expansion_prompt()` with WIDTH action should contain `<discrimination_guide>`, `<is_a_vs_has_a_test>`, `<ufo_type_mapping>` but NOT `<part_whole_patterns>`

@@ -187,7 +187,7 @@ generate(action)이 raw JSON 문자열을 반환하기만 하면, 나머지(파�
 5. 추가 hard-case 제안:
    - 3단계 이상 깊이의 확장 (현재 테스트는 1회 확장)
    - 확장 후에도 여전히 WARNING인 경우 (max_expansion_rounds 도달)
-   - CORRECTION action (현재 루프는 DEPTH/WIDTH만 처리, CORRECTION은 skip)
+   - CORRECTION action 다단계 시나리오 (현재 1회 자동 처리, 다단계는 미검증)
    - 확장 generator가 잘못된 JSON 반환 시 PARSE_FAIL 경로
 
 ## 미구현 (다음 마일스톤)

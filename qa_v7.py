@@ -1,11 +1,11 @@
 """
-QA 검증 스크립트 — concept_gate_v6.3 + TaxoAdapt 통합
+QA 검증 스크립트 — concept_gate_v7 계약 검증
 
 이 스크립트는 같은 디렉토리의 concept_gate_v7.py만 import하며,
 외부 라이브러리(pydantic, unidecode 등)나 LLM API가 필요 없습니다.
 
 실행:
-    python qa_v6_3.py
+    python qa_v7.py
 
 검증 항목:
   PART A. v6.3 단독 동작 (14건) — 소스 파일 내장 테스트 재실행
@@ -16,6 +16,10 @@ QA 검증 스크립트 — concept_gate_v6.3 + TaxoAdapt 통합
   PART F. v7 Phase 4 — ParentCandidateClassifier, generator 인터페이스
   PART G. v7 Phase 5 — Heuristic generator, dedup, HistoryAnalyzer
   PART H. GraphExporter — JSON/Mermaid/GraphML 내보내기
+  PART I. Phase A/B — UFO 판별 가이드, relation_hint, STRUCTURAL 파싱
+  PART J. Phase C1/C2 — CompositionGate 공리 + UFO 안티패턴
+  PART K. Phase C3 — relational_scaling 파생·멱등성
+  PART L. 구성 vs 구조 혼동 — Transformer/Attention 실 도메인 시나리오
 
 각 PART는 독립이며, 하나가 실패해도 나머지는 계속 실행됩니다.
 종료 코드: 모두 통과 0, 하나라도 실패 1.
@@ -698,7 +702,7 @@ R.check("K4 rca_scaling 배선: 기본 False 무변경 + True면 탈것→자동
 # ═════════════════════════════════════════════
 # PART L. 구성(composition) vs 구조(structure) 혼동 시나리오
 # ═════════════════════════════════════════════
-# 실 도메인(Transformer/Attention)에서 흔히 일어나는 모델링 오류 4가지.
+# 실 도메인(Transformer/Attention)에서 흔히 일어나는 모델링 오류 4가지 + 올바른 모델링 대조군 1건.
 # "어텐션에 정형화된 구조가 있다고 착각" — 메커니즘을 부품으로 취급하는 실수.
 print("\n[PART L] 구성 vs 구조 혼동 시나리오 (Transformer/Attention)")
 
