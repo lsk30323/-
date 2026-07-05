@@ -486,24 +486,24 @@ print("\n[PART I] Phase B: STRUCTURAL + relation_hint")
 R.check("I1 STRUCTURAL 비-essential",
         cg.FeatureType.STRUCTURAL not in cg.ISA_ALLOWED_TYPES)
 
-# I2. relation_hint=component_of → essential을 STRUCTURAL로 교정
+# I2. LLM이 structural_composition을 직접 출력 → STRUCTURAL로 파싱
 import json as _json
 raw = _json.dumps({"expansions": [{"concept": "자동차", "new_features": [
-    {"feature": "엔진", "type": "essential_feature",
+    {"feature": "엔진", "type": "structural_composition",
      "evidence": "자동차는 엔진을 가진다", "relation_hint": "component_of"},
 ]}]}, ensure_ascii=False)
 cs, _ = cg.parse_expansion_response(raw, [NC("자동차", [])])
 eng = next(f for f in cs[0].features if f.feature == "엔진")
-R.check("I2 component_of → STRUCTURAL 강등", eng.type == cg.FeatureType.STRUCTURAL)
+R.check("I2 structural_composition 직접 출력 → STRUCTURAL", eng.type == cg.FeatureType.STRUCTURAL)
 
-# I3. relation_hint=is_a → essential 유지
+# I3. relation_hint=is_a + essential → essential 유지 (교정 없이 통과)
 raw2 = _json.dumps({"expansions": [{"concept": "고양이", "new_features": [
     {"feature": "포유류", "type": "essential_feature",
      "evidence": "분류학상 포유강", "relation_hint": "is_a"},
 ]}]}, ensure_ascii=False)
 cs2, _ = cg.parse_expansion_response(raw2, [NC("고양이", [])])
 mam = next(f for f in cs2[0].features if f.feature == "포유류")
-R.check("I3 is_a → ESSENTIAL 유지", mam.type == cg.FeatureType.ESSENTIAL)
+R.check("I3 is_a + essential → ESSENTIAL 유지", mam.type == cg.FeatureType.ESSENTIAL)
 
 # I4. SemanticTypeInference 구조 마커
 r_struct = cg.SemanticTypeInference.infer("구성요소", "", "")

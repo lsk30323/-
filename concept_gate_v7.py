@@ -42,15 +42,12 @@ LLM 연결 방법:
 """
 
 from __future__ import annotations
-import heapq, json, math, re, os, sys
+import heapq, json, math, re
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Set, Tuple
 from itertools import combinations
 from dataclasses import dataclass, field
 from enum import Enum
-
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from cg_partwhole import hint_to_feature_type  # noqa: E402  (obo-relations subtree 조립)
 
 
 # ═══════════════════════════════════════════════════════
@@ -195,10 +192,16 @@ class SemanticTypeInference:
         "분류학", "생물학적 분류", "계통분류", "계통적 분류", "형태학적", "해부학적",
     }
 
+    # ponytail: 정확 일치 — STRUCTURAL 마커는 일반 한국어와 충돌 위험 ("부품" ⊂ "일부품목")
+    _EXACT_MATCH = frozenset({"구성요소", "부품", "구성부품"})
+
     @classmethod
     def _scan(cls, text):
         for m, ft in cls.SINGLE_STRONG.items():
-            if m in text: return ft, [m]
+            if m in cls._EXACT_MATCH:
+                if text == m: return ft, [m]
+            elif m in text:
+                return ft, [m]
         for combo, ft in cls.COMBOS:
             if all(m in text for m in combo): return ft, sorted(combo)
         return None, []
@@ -315,7 +318,10 @@ class ConceptGate:
 
     def anti_context_gate(self, parent, child):
         pu = parent.all_attrs - child.all_attrs
-        cx = {f.feature for f in parent.features if f.type not in ISA_ALLOWED_TYPES and f.feature in pu}
+        # STRUCTURAL(has-a)은 is-a 계층과 무관 — 제외
+        cx = {f.feature for f in parent.features
+              if f.type not in ISA_ALLOWED_TYPES and f.type != FeatureType.STRUCTURAL
+              and f.feature in pu}
         if cx:
             return GateResult("Anti-Context Gate", False, f'비-essential: {sorted(cx)}',
                               severity=GateSeverity.ERROR)
@@ -884,7 +890,10 @@ EXPANSION_OUTPUT_SCHEMA = {
                             "required": ["feature", "type", "evidence"],
                             "properties": {
                                 "feature": {"type": "string"},
-                                "type": {"type": "string"},
+                                "type": {"type": "string",
+                                         "enum": ["essential_feature", "structural_composition",
+                                                  "functional", "contextual_usage",
+                                                  "locational", "social_treatment"]},
                                 "evidence": {"type": "string", "minLength": 4},
                                 "relation_hint": {
                                     "type": "string",
@@ -917,9 +926,9 @@ def _ufo_discrimination_guide(mode: ExpansionType) -> str:
         "(2) 동질성(homeomerous): 부분이 전체와 같은 종류인가?\n"
         "    예 → 물질·수량 관계 / 아니오 → 구성요소-통합체 또는 멤버-집합\n"
         "(3) 분리가능성: 부분을 제거해도 전체의 정체성이 유지되는가?\n"
-        "    예 → 비본질적 부분(functional 또는 contextual_usage) / 아니오 → 본질적 부분이지만 여전히 has-a\n"
+        "    예 → 비본질적 부분 / 아니오 → 본질적 부분이지만 여전히 has-a\n"
         "핵심 원칙: \"X는 Y의 일종이다\"(is-a)만 essential_feature로. "
-        "\"X는 Y를 가진다/포함한다\"(has-a)는 반드시 다른 type으로.\n"
+        "\"X는 Y를 가진다/포함한다\"(has-a)는 structural_composition으로.\n"
         "</is_a_vs_has_a_test>\n"
     )
     section_b = (
@@ -927,6 +936,8 @@ def _ufo_discrimination_guide(mode: ExpansionType) -> str:
         "속성 유형 판별 가이드:\n"
         "essential_feature (is-a 계층): 정체성 원리를 제공, 모든 인스턴스가 필연적으로 가짐. "
         "예: 척추동물→척추, 포유류→젖샘·체온조절\n"
+        "structural_composition (has-a 구성): 부분-전체 관계. 구성요소·멤버·부분. "
+        "예: 자동차→엔진, 숲→나무, 컴퓨터→CPU\n"
         "functional: 용도·역할·기능에 의한 분류(맥락 의존). 예: 사냥개→사냥용도, 식용식물→식용가능\n"
         "contextual_usage: 인간의 분류 관행·시장·요리 맥락. 예: 채소→요리에서의 분류\n"
         "locational: 서식지·분포·생태적 위치. 예: 담수어→민물 서식\n"
@@ -936,13 +947,14 @@ def _ufo_discrimination_guide(mode: ExpansionType) -> str:
     section_c = (
         "<part_whole_patterns>\n"
         "has-a로 분류해야 하는 부분-전체 패턴 6가지:\n"
-        "(1) 구성요소-통합체: 엔진은 자동차의 구성요소 → functional\n"
-        "(2) 멤버-집합: 나무는 숲의 구성원 → contextual_usage\n"
-        "(3) 부분-질량: 조각은 파이의 부분 → contextual_usage\n"
+        "(1) 구성요소-통합체: 엔진은 자동차의 구성요소 → structural_composition\n"
+        "(2) 멤버-집합: 나무는 숲의 구성원 → structural_composition\n"
+        "(3) 부분-질량: 조각은 파이의 부분 → structural_composition\n"
         "(4) 재료-대상: 철은 칼의 재료 → essential_feature (재료는 본질이 될 수 있음)\n"
         "(5) 단계-과정: 유충은 변태의 단계 → contextual_usage\n"
         "(6) 장소-영역: 오아시스는 사막의 부분 → locational\n"
-        "주의: 재료-대상(4)만 essential_feature 가능. 나머지 5가지는 반드시 비-essential type을 사용하세요.\n"
+        "주의: 재료-대상(4)만 essential_feature 가능. (1)~(3)은 structural_composition, "
+        "(5)는 contextual_usage, (6)은 locational을 사용하세요.\n"
         "</part_whole_patterns>\n"
     )
     if mode == ExpansionType.DEPTH:
@@ -1015,6 +1027,8 @@ def build_expansion_prompt(action: ExpansionAction) -> str:
         '    }\n'
         '  ]\n'
         '}\n'
+        'type 선택지: essential_feature, structural_composition, '
+        'functional, contextual_usage, locational, social_treatment\n'
         'relation_hint 선택지: is_a, component_of, member_of, '
         'subcollection_of, subquantity_of, material_of, phase_of, located_in'
     )
@@ -1081,13 +1095,6 @@ def parse_expansion_response(raw: str, original_concepts: List[NormalizedConcept
             if ftype is None:
                 errors.append(GateResult("Expansion Parse", False,
                     f'"{cname}"."{fname}": unknown type "{ftype_str}"', severity=GateSeverity.ERROR)); continue
-            # Phase B: relation_hint(UFO 어휘, obo-relations 기반)로 잘못된 essential 교정.
-            # LLM이 has-a를 essential로 표기한 경우만 비-essential로 강등 (deterministic).
-            hint_type_str = hint_to_feature_type(rf.get("relation_hint"))
-            if hint_type_str and ftype == FeatureType.ESSENTIAL:
-                hinted = next((ft for ft in FeatureType if ft.value == hint_type_str), None)
-                if hinted is not None and hinted != FeatureType.ESSENTIAL:
-                    ftype = hinted
             ev = rf.get("evidence", "")
             if not isinstance(ev, str):
                 ev = str(ev)
@@ -1457,20 +1464,10 @@ class UFOAntiPatternGate:
 
     @staticmethod
     def _is_ancestor(reasoner, a, b) -> bool:
-        """reasoner.dag(부모→자식)에서 a로부터 b 도달 가능한지 BFS. (a==b는 False)"""
+        """reasoner.dag에서 a→...→b 도달 가능 여부. CompositionGate._reachable 재사용."""
         if a == b:
             return False
-        seen = set()
-        queue = list(reasoner.dag.get(a, []))
-        while queue:
-            node = queue.pop(0)
-            if node == b:
-                return True
-            if node in seen:
-                continue
-            seen.add(node)
-            queue.extend(reasoner.dag.get(node, []))
-        return False
+        return b in CompositionGate._reachable(dict(reasoner.dag), a)
 
     @staticmethod
     def detect(reasoner, concepts) -> Tuple[GateReport, List[Dict]]:
@@ -1655,7 +1652,7 @@ class ConceptPipeline:
                         "composition_issues": comp_iss, "anti_patterns": ap_iss,
                         "expansion_actions": exp_actions, "correction_prompts": prompts}
             prompts.append(CorrectionPromptGenerator.generate_standalone(reps))
-        result = reasoner.finalize() if reasoner else {"dag":{},"levels":{},"definitions":{},"aux_relations":{},"isolated":[]}
+        result = reasoner.finalize() if reasoner else {"dag":{},"levels":{},"definitions":{},"aux_relations":{},"composition":{"edges":[],"shared_parts":{}},"isolated":[]}
         return {"result": result, "status": "FAIL", "rounds_used": len(cands_per_round),
                 "all_reports": hist, "repairs": [], "warnings": [],
                 "signature_issues": [], "post_dag_issues": [],
