@@ -61,11 +61,6 @@ def hint_to_feature_type(relation_hint: Optional[str]) -> Optional[str]:
     return RELATION_HINT_TYPE.get(relation_hint.strip().lower())
 
 
-def is_has_a(relation_hint: Optional[str]) -> bool:
-    """relation_hint가 구성적(has-a, structural) 관계인지."""
-    return hint_to_feature_type(relation_hint) == "structural_composition"
-
-
 def _default_obo_path() -> str:
     """cg_partwhole.py 기준으로 core.obo 후보 경로 탐색 (root / files/ 양쪽)."""
     here = os.path.dirname(os.path.abspath(__file__))

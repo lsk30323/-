@@ -215,6 +215,8 @@ def _serialize_pipeline_output(out):
             {"concept": c, "feature": f, "type": t}
             for (c, f), t in r.get("aux_relations", {}).items()
         ],
+        # has-a(부분-전체) 그래프 — DAG(is-a)와 독립적인 구성 관계
+        "composition": r.get("composition", {"edges": [], "shared_parts": {}}),
         "expansion_actions": [
             _serialize_expansion_action(a)
             for a in out.get("expansion_actions", [])
@@ -223,6 +225,10 @@ def _serialize_pipeline_output(out):
         "warnings": [_serialize_warning(w) for w in out.get("warnings", [])],
         "signature_issues": out.get("signature_issues", []),
         "post_dag_issues": out.get("post_dag_issues", []),
+        # mereology 공리 위반 (반대칭, 순환, is-a/has-a 혼동)
+        "composition_issues": out.get("composition_issues", []),
+        # UFO 안티패턴 (MixRig, PartOver, WholeOver) — WARNING 수준
+        "anti_patterns": out.get("anti_patterns", []),
     }
 
 
@@ -235,8 +241,17 @@ def run_pipeline(concepts: list[dict]) -> dict:
     """Validate normalized concepts and build a taxonomy DAG.
 
     Each concept needs a name and a list of features. Each feature needs
-    feature (str), type (one of: essential_feature, contextual_usage,
-    locational, functional, social_treatment), and evidence (str, min 4 chars).
+    feature (str), type (one of: essential_feature, structural_composition,
+    contextual_usage, locational, functional, social_treatment),
+    and evidence (str, min 4 chars).
+
+    essential_feature creates is-a DAG edges (classification hierarchy).
+    structural_composition creates has-a composition edges (part-whole graph),
+    returned separately in the composition field.
+
+    Optional relation_hint (str) provides UFO vocabulary context:
+    is_a, component_of, member_of, subcollection_of, subquantity_of,
+    material_of, phase_of, located_in.
 
     If status is PASS_WITH_WARNING or NEEDS_CORRECTION, inspect
     expansion_actions and call expand with new differentia to refine the DAG.

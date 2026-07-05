@@ -1,16 +1,20 @@
 # Phase A Implementation Packet: UFO-based is-a vs has-a Discrimination
 
+> **설계 이력**: Phase A 원안은 LLM에게 has-a를 `functional`로 출력하도록 지시했으나,
+> Phase B에서 STRUCTURAL 타입 추가 후 프롬프트-교정 논리 모순이 발생.
+> Option A(프롬프트가 structural_composition을 직접 지시, 교정 로직 삭제)로 해결.
+> 아래 문서는 해결 후 현재 코드 상태를 반영한다.
+
 ## Goal
 
-Add UFO-based is-a vs has-a discrimination guidance to `build_expansion_prompt()` so the LLM correctly classifies features as ESSENTIAL (is-a) vs FUNCTIONAL/CONTEXTUAL/LOCATIONAL/SOCIAL (has-a) during concept expansion.
+Add UFO-based is-a vs has-a discrimination guidance to `build_expansion_prompt()` so the LLM correctly classifies features as ESSENTIAL (is-a) vs STRUCTURAL (has-a) vs FUNCTIONAL/CONTEXTUAL/LOCATIONAL/SOCIAL during concept expansion.
 
 ## Constraints
 
-- No new `FeatureType` enum values
-- No changes to `ISA_ALLOWED_TYPES`
-- No changes to `parse_expansion_response()`
-- No pipeline changes
-- All existing tests (60 inline + 63 QA) must pass
+- `FeatureType.STRUCTURAL` 추가됨 (Phase B). `ISA_ALLOWED_TYPES`는 ESSENTIAL만 유지.
+- `parse_expansion_response()`의 hint→type 교정 로직은 삭제됨 (Phase A/B 모순 해소).
+  LLM이 `structural_composition`을 직접 출력하므로 교정이 불필요.
+- All existing tests (60 inline + 84 QA + 30 server) must pass
 - Korean language for all prompt text
 
 ## Files to Modify
@@ -59,6 +63,11 @@ essential_feature (is-a 계층에 사용):
   - 정체성 원리를 제공하는 속성 (해당 개념의 모든 인스턴스가 필연적으로 갖는 속성)
   - 예: "척추동물" → 척추를 가짐, "포유류" → 젖샘/체온조절
 
+structural_composition (has-a 부분-전체):
+  - 구성요소-통합체, 멤버-집합 등 부분-전체 관계
+  - DL role axiom(∃R.C)에 해당 — is-a DAG에 참여하지 않음
+  - 예: "자동차" → 엔진을 가짐, "숲" → 나무를 포함
+
 functional (기능적 속성):
   - 용도, 역할, 기능에 의한 분류 (맥락에 따라 변할 수 있음)
   - 예: "사냥개" → 사냥용도, "식용식물" → 식용가능
@@ -82,15 +91,16 @@ social_treatment (사회적 취급):
 <part_whole_patterns>
 has-a로 분류해야 하는 부분-전체 패턴 6가지:
 
-(1) 구성요소-통합체: 엔진은 자동차의 구성요소 → functional
-(2) 멤버-집합: 나무는 숲의 구성원 → contextual_usage
-(3) 부분-질량: 조각은 파이의 부분 → contextual_usage
+(1) 구성요소-통합체: 엔진은 자동차의 구성요소 → structural_composition
+(2) 멤버-집합: 나무는 숲의 구성원 → structural_composition
+(3) 부분-질량: 조각은 파이의 부분 → structural_composition
 (4) 재료-대상: 철은 칼의 재료 → essential_feature (재료는 본질이 될 수 있음)
 (5) 단계-과정: 유충은 변태의 단계 → contextual_usage
 (6) 장소-영역: 오아시스는 사막의 부분 → locational
 
 주의: 재료-대상(4)만 essential_feature가 될 수 있습니다.
-나머지 5가지는 반드시 비-essential type을 사용하세요.
+구성요소/멤버/부분-질량(1-3)은 structural_composition으로,
+단계(5)는 contextual_usage로, 장소(6)는 locational로 분류하세요.
 </part_whole_patterns>
 ```
 
@@ -316,26 +326,24 @@ cp /home/user/-/concept_gate_v7.py /home/user/-/files/concept_gate_v7.py
 ## Verification
 
 1. Run inline tests: `cd /home/user/- && python3 concept_gate_v7.py`
-   - Expect: all 60 tests pass (the prompt content tests check for `differentia_addition` and concept names, which are preserved)
+   - Expect: all 60 tests pass
 2. Run QA suite: `cd /home/user/- && python3 qa_v7.py`
-   - Expect: all 63 tests pass
+   - Expect: all 84 tests pass (Phase B/C에서 PART I/J/K 추가)
 3. Manual verification:
    - `build_expansion_prompt()` with DEPTH action should contain `<discrimination_guide>`, `<is_a_vs_has_a_test>`, `<ufo_type_mapping>`, `<part_whole_patterns>`
    - `build_expansion_prompt()` with WIDTH action should contain `<discrimination_guide>`, `<is_a_vs_has_a_test>`, `<ufo_type_mapping>` but NOT `<part_whole_patterns>`
    - `build_expansion_prompt()` with CORRECTION action should contain `<discrimination_guide>`, `<ufo_type_mapping>`, `<part_whole_patterns>` but NOT `<is_a_vs_has_a_test>`
    - `EXPANSION_OUTPUT_SCHEMA` contains `relation_hint` in properties, NOT in required
 
-## What NOT to Change
+## What NOT to Change (Phase A 단독 기준 — Phase B/C에서 일부 변경됨)
 
-- `FeatureType` enum (line 71-76)
-- `ISA_ALLOWED_TYPES` (line 78)
-- `SemanticTypeInference` class (lines 165-222)
-- `parse_expansion_response()` (lines 916-986)
-- `DAGReasoner` (lines 623-700)
-- `ConceptPipeline.run()` (lines 1280-1320)
-- `files/server.py` (no code changes)
-- `qa_v7.py` (no test changes)
-- `files/test_server.py` (no test changes)
+- `ISA_ALLOWED_TYPES` — ESSENTIAL만 유지 (변경 없음)
+- `DAGReasoner.finalize()` — 기존 키 변경 금지, 키 추가만 허용
+- `vendor/obo-relations/` — subtree 직접 수정 금지 (wrap/adapt)
+
+> **참고**: Phase B에서 `FeatureType.STRUCTURAL` 추가, `SemanticTypeInference`에
+> 구조 마커 추가, `parse_expansion_response()`에서 hint 교정 로직 추가 후 삭제됨.
+> Phase C에서 `CompositionGate`, `UFOAntiPatternGate`, `relational_scaling` 추가.
 
 ## Git
 
