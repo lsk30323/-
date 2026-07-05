@@ -1,11 +1,19 @@
-"""Part-whole 어댑터 — obo-relations subtree에서 조립.
+"""Part-whole 어댑터 — obo-relations subtree(vendor/)에서 조립.
 
 vendor/obo-relations/core.obo의 관계 정의(part of / has part / member of ...)를
 읽어 has-a(구성적) 관계 어휘를 제공한다. subtree를 직접 수정하지 않고 여기서 wrap.
 
 핵심 용도:
-  1. LLM의 relation_hint(UFO 어휘) → ConceptGate FeatureType 매핑
-  2. OBO 표준 part-whole 관계 집합/추이성 노출 (Phase C DAG 추론 대비)
+  1. RELATION_HINT_TYPE: UFO relation_hint 어휘 → FeatureType.value 매핑 정의
+     (참조용 — concept_gate_v7.py에서 직접 import하지 않음.
+      LLM이 structural_composition을 직접 출력하므로 후교정 불필요.)
+  2. load_obo_partwhole(): OBO 표준 part-whole 관계 집합/추이성 파싱
+     (qa_v7.py에서 subtree 연결 검증에 사용)
+
+설계 이력: 초기에는 hint_to_feature_type()을 concept_gate_v7.py가 import하여
+LLM의 잘못된 type을 교정했으나, 프롬프트와 교정 로직의 모순으로 STRUCTURAL이
+도달 불가한 설계 결함이 발생. 현재는 프롬프트가 직접 올바른 타입을 지시하므로
+교정 로직이 제거됨. 이 모듈은 어휘 정의와 obo 파싱 기능으로 유지.
 
 stdlib만 사용. core.obo가 없으면 내장 상수로 graceful fallback.
 """
@@ -16,8 +24,10 @@ import re
 from typing import Dict, Optional
 
 
-# ── UFO relation_hint → FeatureType.value 매핑 (Phase A 판별 가이드와 일치) ──
-# is_a/material_of만 is-a 계층(essential). 나머지는 비-essential.
+# ── UFO relation_hint → FeatureType.value 매핑 ──
+# LLM schema의 relation_hint enum과 대응. is_a/material_of만 essential,
+# component_of/member_of 등은 structural_composition(has-a),
+# phase_of는 contextual_usage(UFO anti-rigid), located_in은 locational.
 RELATION_HINT_TYPE: Dict[str, str] = {
     "is_a":            "essential_feature",       # 분류적 (C ⊑ D)
     "material_of":     "essential_feature",       # Winston: 재료-대상은 본질 가능

@@ -74,8 +74,14 @@ class FeatureType(Enum):
     LOCATIONAL = "locational"
     FUNCTIONAL = "functional"
     SOCIAL     = "social_treatment"
-    STRUCTURAL = "structural_composition"  # has-a/part-whole (Phase B, 비-essential)
+    # DL에서 concept axiom(C ⊑ D, is-a)과 role axiom(∃R.C, has-a)은 별개의 공리.
+    # STRUCTURAL은 role axiom에 해당하며 DAG(is-a 격자)에 참여하지 않는다.
+    # 대신 composition_view()로 별도 부분-전체 그래프를 구성한다.
+    # 근거: UFO(Guizzardi 2005) componentOf/memberOf + OBO RO part_of(BFO:0000050).
+    STRUCTURAL = "structural_composition"
 
+# is-a DAG 간선을 형성하는 유일한 타입. STRUCTURAL 등 나머지는 aux_graph/composition_view로 분리.
+# 이 집합을 확장하면 has-a 속성이 분류 계층에 혼입되므로 변경하지 않는다.
 ISA_ALLOWED_TYPES: Set[FeatureType] = {FeatureType.ESSENTIAL}
 
 class FeatureVerdict(Enum):
@@ -176,7 +182,9 @@ class SemanticTypeInference:
         (frozenset({"용도", "사용"}), FeatureType.FUNCTIONAL),
         (frozenset({"서식", "환경"}), FeatureType.LOCATIONAL),
         (frozenset({"서식", "장소"}), FeatureType.LOCATIONAL),
-        # Phase B: has-a/part-whole 구조 마커 (obo-relations part_of/member_of 계열)
+        # 한국어 피처명에서 has-a(부분-전체) 관계를 감지하는 마커.
+        # 매칭 시 STRUCTURAL로 분류 → DAG에서 제외, composition_view로 이동.
+        # _EXACT_MATCH에 등록된 마커는 정확 일치만 허용 (부분 문자열 오탐 방지).
         (frozenset({"구성", "부품"}), FeatureType.STRUCTURAL),
         (frozenset({"구성", "요소"}), FeatureType.STRUCTURAL),
         (frozenset({"부분", "전체"}), FeatureType.STRUCTURAL),
@@ -184,7 +192,6 @@ class SemanticTypeInference:
     SINGLE_STRONG = {
         "서식지": FeatureType.LOCATIONAL, "수중생활": FeatureType.LOCATIONAL,
         "해양생활": FeatureType.LOCATIONAL, "착용용도": FeatureType.FUNCTIONAL,
-        # Phase B: 단일 구조 마커
         "구성요소": FeatureType.STRUCTURAL, "부품": FeatureType.STRUCTURAL,
         "구성부품": FeatureType.STRUCTURAL,
     }
@@ -192,7 +199,9 @@ class SemanticTypeInference:
         "분류학", "생물학적 분류", "계통분류", "계통적 분류", "형태학적", "해부학적",
     }
 
-    # ponytail: 정확 일치 — STRUCTURAL 마커는 일반 한국어와 충돌 위험 ("부품" ⊂ "일부품목")
+    # 한국어는 공백 단어 경계가 없어 substring 매칭("부품" in "일부품목")이 오탐.
+    # 이 집합의 마커는 피처명 전체가 마커와 일치할 때만 STRUCTURAL로 판정.
+    # ponytail: 정규식/형태소 분석 대신 정확 일치로 충분 (마커가 3개뿐)
     _EXACT_MATCH = frozenset({"구성요소", "부품", "구성부품"})
 
     @classmethod
@@ -317,8 +326,13 @@ class ConceptGate:
         return result, judgments, repairs, warnings
 
     def anti_context_gate(self, parent, child):
+        """부모에만 있는 비-essential 피처가 자식에 없으면 is-a 간선 차단.
+
+        의도: "잘못 분류된 가능성이 있는" 피처를 잡는 gate.
+        STRUCTURAL은 의도적 비-essential(has-a)이므로 제외한다 —
+        "자동차 has 엔진"이 "전기차 is-a 자동차"를 차단해서는 안 된다.
+        """
         pu = parent.all_attrs - child.all_attrs
-        # STRUCTURAL(has-a)은 is-a 계층과 무관 — 제외
         cx = {f.feature for f in parent.features
               if f.type not in ISA_ALLOWED_TYPES and f.type != FeatureType.STRUCTURAL
               and f.feature in pu}
@@ -710,9 +724,13 @@ class DAGReasoner:
                 self.aux_graph[(c.name, f.feature)] = f.type.value
 
     def composition_view(self):
-        """STRUCTURAL(has-a) 피처만 모은 구성 그래프 뷰 (Phase C 최소).
+        """DAG(is-a)와 독립적인 부분-전체(has-a) 그래프.
 
-        edges: (전체 개념, 부분) 쌍. DAG(is-a)와 분리된 별도 그래프.
+        is-a 격자는 ESSENTIAL 피처로 구성되고, 이 뷰는 STRUCTURAL 피처로 구성된다.
+        두 그래프를 분리함으로써 "분류"와 "구성"을 독립적으로 추론할 수 있다.
+        CompositionGate가 이 뷰에 mereology 공리(반대칭, 비순환)를 적용한다.
+
+        edges: (전체 개념, 부분) 쌍.
         shared_parts: 같은 부분이 여러 전체에 속함 — UFO shareable 메타속성.
         """
         edges = [(c.name, f.feature) for c in self.concepts
@@ -872,6 +890,10 @@ class ExpansionPlanner:
 # Expansion 스키마 + 프롬프트 + 파서 (v7 Phase 3)
 # ═══════════════════════════════════════════════════════
 
+# LLM 확장 응답의 JSON schema. type에 enum을 명시하여 LLM이 올바른 타입만 출력하도록 강제.
+# structural_composition을 직접 출력하게 하는 것이 핵심 설계 결정:
+# 초기에는 LLM에게 functional로 쓰게 하고 후처리로 교정했으나, 프롬프트와 교정 로직이
+# 모순되어 STRUCTURAL이 도달 불가했음. 현재는 LLM이 직접 올바른 타입을 선택한다.
 EXPANSION_OUTPUT_SCHEMA = {
     "type": "object",
     "required": ["expansions"],
@@ -913,10 +935,18 @@ EXPANSION_OUTPUT_SCHEMA = {
 
 
 def _ufo_discrimination_guide(mode: ExpansionType) -> str:
-    """UFO/Winston 기반 is-a vs has-a 판별 가이드 (mode별 섹션 조합).
+    """LLM에게 is-a와 has-a를 구분하는 방법을 가르치는 프롬프트 삽입물.
+
+    이론적 근거:
+    - Section A: Winston(1987) meronymy 3차원 (기능적 의존성, 동질성, 분리가능성)
+    - Section B: UFO(Guizzardi 2005) 엔티티 스테레오타입 → FeatureType 매핑
+    - Section C: Winston 6유형 부분-전체 패턴 → structural_composition 직접 지시
+
+    핵심 설계 의도: LLM이 has-a 관계를 structural_composition으로 직접 출력하게 한다.
+    이전에는 functional로 쓰게 하고 relation_hint로 후교정했으나, 프롬프트-교정 모순으로
+    STRUCTURAL 타입이 도달 불가했음. 현재는 교정 없이 단일 경로로 동작한다.
 
     DEPTH: A+B+C, WIDTH: A+B, CORRECTION: B+C.
-    A=Winston 3차원 테스트, B=UFO type mapping, C=part-whole 패턴.
     """
     section_a = (
         "<is_a_vs_has_a_test>\n"
@@ -1351,13 +1381,16 @@ class ExpansionHistoryAnalyzer:
 # ═══════════════════════════════════════════════════════
 
 class CompositionGate:
-    """구성(has-a) 그래프의 mereology 공리 검증 (Phase C1).
+    """composition_view()(부분-전체 그래프)에 mereology 공리를 적용하는 gate.
 
-    공리 출처: vendor/obo-relations core.obo (BFO:0000050/51)
-    - 반대칭: 서로가 서로의 부분일 수 없음 (proper parthood)
-    - 비순환: 부분명이 개념명과 일치하는 간선만 추이 폐쇄 → 자기 도달 시 위반
-    - is-a/has-a 배타: DAG 조상·자손 관계인 두 개념 사이 has_part 간선 금지
-    - 자기 부분: (A, A) 간선 — 고전 mereology는 반사 허용이나 모델링에선 의심
+    DAG(is-a)와 별도로, has-a 그래프가 온톨로지적으로 건전한지 검증한다.
+    공리 출처: OBO Relation Ontology(vendor/obo-relations) core.obo — BFO:0000050(part_of)/51(has_part).
+
+    검사 4종:
+    - 반대칭: A⊃B이면서 B⊃A는 불가 (proper parthood, OBO core.obo)
+    - 비순환: 추이 폐쇄에서 자기 도달 = 순환 (OBO is_transitive + 반대칭에서 도출)
+    - is-a/has-a 배타: DAG 조상-자손 사이에 has_part 간선 → 두 관계의 혼동
+    - 자기 부분: (A, A) — 고전 mereology는 반사 허용이나 모델링에선 의심
     """
 
     @staticmethod
@@ -1453,13 +1486,17 @@ class CompositionGate:
 # ═══════════════════════════════════════════════════════
 
 class UFOAntiPatternGate:
-    """UFO/OntoUML anti-pattern 감지 (Phase C2). 전부 WARNING — 차단하지 않음.
+    """UFO/OntoUML 카탈로그(Guizzardi 2021)에서 데이터로 판별 가능한 안티패턴 3종 감지.
 
-    감지 3종 (근거: UFO/OntoUML 카탈로그, Guizzardi 2021):
-      - MixRig  : 같은 feature명이 ESSENTIAL(rigid)과 비-ESSENTIAL(anti-rigid)로 혼용
-      - PartOver: shared_parts의 한 부분이 조상-자손 관계인 두 전체에 중복 소속
-      - WholeOver: 한 개념이 STRUCTURAL 부분과 그 특수화를 동시 보유
-    issue dict: {"pattern": ..., "subject": ..., "detail": ..., "involved": [...]}
+    전부 WARNING — 파이프라인을 차단하지 않고 모델링 개선을 위한 정보를 제공한다.
+    MixRig만 ExpansionPlanner가 CORRECTION action으로 변환한다.
+
+    - MixRig (rigidity 혼합): 같은 feature명이 ESSENTIAL(rigid, 정체성 제공)과
+      비-ESSENTIAL(anti-rigid, 맥락 의존)로 혼용 → 분류 기준이 오염됨
+    - PartOver (부분 중복): shared_parts의 한 부분이 is-a 조상-자손인 두 전체에
+      모두 소속 → 자식이 상속받을 부분을 중복 선언 (예: 포유류 has 심장 + 개 has 심장)
+    - WholeOver (전체 중복): 한 개념이 STRUCTURAL 부분과 그 특수화를 동시 보유
+      → 일반 부분과 구체 부분이 공존 (예: 차 has 바퀴 + has 앞바퀴)
     """
 
     @staticmethod
@@ -1530,21 +1567,27 @@ class UFOAntiPatternGate:
 # RCA 관계 스케일링 (Phase C3)
 # ═══════════════════════════════════════════════════════
 
-RCA_SCALING_MARKER = "rca_scaling"        # 파생 피처 evidence 추적 마커
-RCA_SCALING_PREFIX = "∃has_part."         # RCA existential scaling 표기 (∃R.C)
+RCA_SCALING_MARKER = "rca_scaling"
+RCA_SCALING_PREFIX = "∃has_part."
 
 def relational_scaling(concepts: List[NormalizedConcept]) -> List[NormalizedConcept]:
-    """RCA existential scaling 1-pass (Phase C3).
+    """has-a 관계를 is-a 격자에 반영하는 RCA existential scaling.
 
-    부분 이름이 개념명과 일치하는 STRUCTURAL 피처를
-    파생 ESSENTIAL 피처 "∃has_part.{부분}"으로 추가한 사본을 반환.
-    파생 피처는 evidence에 'rca_scaling' 마커를 남겨 추적 가능하게 한다.
-    원본 리스트는 변경하지 않는다 (순수 함수). 같은 파생 피처가 이미
-    있으면 추가하지 않음 (멱등 — 재진입 루프에서 안전).
+    RCA(Relational Concept Analysis, Rouane-Hacene 2013)의 핵심 아이디어:
+    객체 간 관계(has_part)를 관계 속성(∃has_part.C)으로 변환하여 FCA 문맥에 주입하면,
+    구성이 비슷한 개념들이 is-a 격자에서 자연스럽게 묶인다.
 
-    근거: RCA(Rouane-Hacene 2013)의 관계 속성 ∃R.C. 파생을 ESSENTIAL로
-    두어 DAG 간선 형성에 기여시키되, 원본 STRUCTURAL은 유지해
-    composition_view가 계속 동작. 비개념 부분("엔진"이 개념에 없음)은
+    예: 자동차{엔진(S)} + 전기차{엔진(S)} → 둘 다 ∃has_part.엔진(E) 획득
+        → 격자에서 "엔진 보유 탈것" 노드로 묶임.
+
+    제약:
+    - 부분 이름이 개념명과 일치하는 STRUCTURAL 피처만 대상 (비개념 부분은 leaf)
+    - 파생 피처는 ESSENTIAL → DAG 간선에 기여. 원본 STRUCTURAL은 유지 → composition_view 동작
+    - 멱등: 같은 파생 피처가 있으면 추가 안 함 (run_with_expansion 재진입 루프에서 안전)
+    - 순수 함수: 원본 리스트 불변
+
+    ponytail: 완전한 RCA 고정점(다중 격자 반복 수렴)은 과함. 1-pass만 적용하되,
+    run_with_expansion 루프가 이미 재진입 구조이므로 "확장 루프 ≈ RCA 수렴"의 실용적 근사.
     leaf로 취급 — 파생 없음.
     """
     names = {c.name for c in concepts}
